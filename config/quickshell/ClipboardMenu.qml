@@ -10,6 +10,7 @@ Scope {
     property string query: ""
     property var allItems: []
     property var filteredItems: []
+    readonly property string thumbDir: Quickshell.env("HOME") + "/.cache/cliphist-thumbs"
 
     IpcHandler {
         target: "clipboard"
@@ -57,7 +58,7 @@ Scope {
     }
 
     function wipeAll() {
-        actionProc.command = ["cliphist", "wipe"]
+        actionProc.command = ["sh", "-c", "cliphist wipe && rm -rf \"$HOME/.cache/cliphist-thumbs\"/*"]
         actionProc.running = true
         root.allItems = []
         root.filteredItems = []
@@ -65,7 +66,22 @@ Scope {
 
     Process {
         id: listProc
-        command: ["sh", "-c", "cliphist list 2>/dev/null | head -n 80"]
+        command: [
+            "sh", "-c",
+            "td=\"${XDG_CACHE_HOME:-$HOME/.cache}/cliphist-thumbs\"; " +
+            "mkdir -p \"$td\"; " +
+            "find \"$td\" -type f -mtime +7 -delete 2>/dev/null || true; " +
+            "cliphist list 2>/dev/null | head -n 80 | while IFS=$(printf '\\t') read -r id txt; do " +
+            "  case \"$txt\" in " +
+            "    '[[ binary data '*) " +
+            "      th=\"$td/${id}.img\"; " +
+            "      [ -s \"$th\" ] || cliphist decode \"$id\" > \"$th\" 2>/dev/null || true; " +
+            "      printf '%s\\t1\\t%s\\n' \"$id\" \"$txt\" ;; " +
+            "    *) " +
+            "      printf '%s\\t0\\t%s\\n' \"$id\" \"$txt\" ;; " +
+            "  esac; " +
+            "done"
+        ]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = this.text.split("\n")
@@ -73,11 +89,20 @@ Scope {
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i]
                     if (!line.trim()) continue
-                    const tab = line.indexOf("\t")
-                    if (tab === -1) continue
-                    const id = line.slice(0, tab)
-                    const preview = line.slice(tab + 1).trim()
-                    items.push({ id, preview })
+                    const parts = line.split("\t")
+                    if (parts.length < 3) continue
+                    const id = parts[0]
+                    const isImage = parts[1] === "1"
+                    const raw = parts.slice(2).join("\t").trim()
+                    const preview = isImage
+                        ? raw.replace(/^\[\[\s*binary data\s*/, "Image (").replace(/\s*\]\]$/, ")")
+                        : raw
+                    items.push({
+                        id,
+                        isImage,
+                        thumbPath: isImage ? (root.thumbDir + "/" + id + ".img") : "",
+                        preview
+                    })
                 }
                 root.allItems = items
                 root.applyFilter()
@@ -110,7 +135,7 @@ Scope {
         Rectangle {
             anchors.centerIn: parent
             width: Math.min(parent.width - 48, 580)
-            height: 440
+            height: 460
             radius: 16
             color: Theme.bg
             border.width: 1
@@ -227,7 +252,7 @@ Scope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    spacing: 4
+                    spacing: 5
                     model: root.filteredItems
                     highlightMoveDuration: 80
                     boundsBehavior: Flickable.StopAtBounds
@@ -238,24 +263,46 @@ Scope {
                         readonly property bool isCurrent: index === clipList.currentIndex
 
                         width: clipList.width
-                        height: 40
+                        height: modelData.isImage ? 72 : 40
                         radius: 8
                         color: isCurrent ? Theme.primaryContainer : Theme.surfaceContainer
                         border.width: isCurrent ? 1 : 0
                         border.color: Theme.accent
 
-                        Text {
+                        RowLayout {
                             anchors {
                                 fill: parent
-                                leftMargin: 12
+                                leftMargin: 10
                                 rightMargin: 12
                             }
-                            verticalAlignment: Text.AlignVCenter
-                            text: modelData.preview
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 12
-                            color: "#ffffff"
-                            elide: Text.ElideRight
+                            spacing: 10
+
+                            Rectangle {
+                                visible: modelData.isImage
+                                Layout.preferredWidth: 100
+                                Layout.preferredHeight: 56
+                                radius: 6
+                                color: Theme.surfaceContainerHigh
+                                clip: true
+
+                                Image {
+                                    anchors.fill: parent
+                                    source: modelData.isImage ? ("file://" + modelData.thumbPath) : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    cache: false
+                                    sourceSize: Qt.size(200, 112)
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.preview
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                                color: "#ffffff"
+                                elide: Text.ElideRight
+                            }
                         }
 
                         MouseArea {
