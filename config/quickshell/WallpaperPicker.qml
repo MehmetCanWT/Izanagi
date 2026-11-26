@@ -12,6 +12,7 @@ Scope {
     property var allWallpapers: []
     property var filteredWallpapers: []
     property string searchQuery: ""
+    property string activeWallpaper: ""
 
     IpcHandler {
         target: "wallpaper"
@@ -46,7 +47,8 @@ Scope {
             filteredWallpapers = allWallpapers.filter(p => p.toLowerCase().includes(q))
         }
         if (filteredWallpapers.length > 0) {
-            carousel.currentIndex = 0
+            const idx = root.activeWallpaper ? filteredWallpapers.indexOf(root.activeWallpaper) : -1
+            carousel.currentIndex = idx >= 0 ? idx : 0
         }
     }
 
@@ -73,10 +75,24 @@ Scope {
 
     Process {
         id: scanProc
-        command: ["sh", "-c", "find \"$HOME/Pictures/Wallpapers\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"]
+        command: [
+            "sh", "-c",
+            "cur=$(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' \"$HOME/.config/hypr/hyprpaper.conf\" 2>/dev/null | head -n1); " +
+            "cur=${cur/#\\~/$HOME}; " +
+            "printf 'ACTIVE:%s\\n' \"$cur\"; " +
+            "find \"$HOME/Pictures/Wallpapers\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"
+        ]
         stdout: StdioCollector {
             onStreamFinished: {
-                const lines = this.text.split("\n").map(s => s.trim()).filter(s => s.length > 0)
+                const raw = this.text.split("\n").map(s => s.trim()).filter(s => s.length > 0)
+                const lines = []
+                for (let i = 0; i < raw.length; i++) {
+                    if (raw[i].startsWith("ACTIVE:")) {
+                        root.activeWallpaper = raw[i].slice(7).trim()
+                    } else {
+                        lines.push(raw[i])
+                    }
+                }
                 root.allWallpapers = lines
                 root.applyFilter()
             }
