@@ -167,6 +167,7 @@ PanelWindow {
                 Repeater {
                     model: SystemTray.items
                     delegate: Item {
+                        id: trayItem
                         required property var modelData
                         width: 20
                         height: 20
@@ -180,17 +181,28 @@ PanelWindow {
                             smooth: true
                         }
 
+                        QsMenuAnchor {
+                            id: trayMenu
+                            menu: modelData.menu
+                            anchor.window: bar
+                            anchor.edges: Edges.Bottom
+                            anchor.rect.x: trayItem.mapToItem(null, 0, 0).x
+                            anchor.rect.y: trayItem.mapToItem(null, 0, 0).y
+                            anchor.rect.width: trayItem.width
+                            anchor.rect.height: trayItem.height
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             onClicked: (mouse) => {
                                 if (mouse.button === Qt.LeftButton) {
-                                    modelData.activate()
+                                    if (modelData.onlyMenu && modelData.hasMenu) trayMenu.open()
+                                    else modelData.activate()
                                 } else if (mouse.button === Qt.MiddleButton) {
                                     modelData.secondaryActivate()
                                 } else if (mouse.button === Qt.RightButton) {
-                                    const pt = mapToItem(null, mouse.x, mouse.y)
-                                    modelData.display(bar, pt.x, pt.y)
+                                    if (modelData.hasMenu) trayMenu.open()
                                 }
                             }
                         }
