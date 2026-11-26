@@ -59,10 +59,7 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            radius: 14
-            color: Theme.bg
-            border.width: 1
-            border.color: Theme.border
+            color: "transparent"
 
             ColumnLayout {
                 id: col
@@ -70,7 +67,7 @@ Scope {
                     left: parent.left
                     right: parent.right
                     top: parent.top
-                    margins: 12
+                    margins: 6
                 }
                 spacing: 8
 
@@ -80,11 +77,11 @@ Scope {
                     spacing: 3
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: "  CPU"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.textDim; Layout.fillWidth: true }
-                        Text { text: root.cpuPct + "%"; font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true; color: "#ffffff" }
+                        Text { text: "  CPU"; font.family: Theme.fontFamily; font.pixelSize: 12; color: "#e6ffffff"; style: Text.Outline; styleColor: "#aa000000"; Layout.fillWidth: true }
+                        Text { text: root.cpuPct + "%"; font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true; color: "#ffffff"; style: Text.Outline; styleColor: "#aa000000" }
                     }
                     Rectangle {
-                        Layout.fillWidth: true; height: 5; radius: 3; color: Theme.surfaceContainerHigh
+                        Layout.fillWidth: true; height: 5; radius: 3; color: "#55000000"
                         Rectangle { width: parent.width * (Math.min(100, root.cpuPct) / 100); height: parent.height; radius: 3; color: Theme.accent }
                     }
                 }
@@ -95,11 +92,11 @@ Scope {
                     spacing: 3
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: "  RAM"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.textDim; Layout.fillWidth: true }
-                        Text { text: root.ramText + " (" + root.ramPct + "%)"; font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true; color: "#ffffff" }
+                        Text { text: "  RAM"; font.family: Theme.fontFamily; font.pixelSize: 12; color: "#e6ffffff"; style: Text.Outline; styleColor: "#aa000000"; Layout.fillWidth: true }
+                        Text { text: root.ramText + " (" + root.ramPct + "%)"; font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true; color: "#ffffff"; style: Text.Outline; styleColor: "#aa000000" }
                     }
                     Rectangle {
-                        Layout.fillWidth: true; height: 5; radius: 3; color: Theme.surfaceContainerHigh
+                        Layout.fillWidth: true; height: 5; radius: 3; color: "#55000000"
                         Rectangle { width: parent.width * (Math.min(100, root.ramPct) / 100); height: parent.height; radius: 3; color: Theme.tertiary }
                     }
                 }
@@ -107,13 +104,15 @@ Scope {
                 // Temp
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: "  Temp"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.textDim; Layout.fillWidth: true }
+                    Text { text: "  Temp"; font.family: Theme.fontFamily; font.pixelSize: 12; color: "#e6ffffff"; style: Text.Outline; styleColor: "#aa000000"; Layout.fillWidth: true }
                     Text {
                         text: root.tempC + "°C"
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         font.bold: true
                         color: root.tempC >= 80 ? Theme.error : "#ffffff"
+                        style: Text.Outline
+                        styleColor: "#aa000000"
                     }
                 }
             }

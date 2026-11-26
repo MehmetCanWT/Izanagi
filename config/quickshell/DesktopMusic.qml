@@ -89,10 +89,7 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            radius: 18
-            color: Theme.bg
-            border.width: 1
-            border.color: Theme.border
+            color: "transparent"
 
             ColumnLayout {
                 id: col
@@ -100,7 +97,7 @@ Scope {
                     left: parent.left
                     right: parent.right
                     top: parent.top
-                    margins: 12
+                    margins: 6
                 }
                 spacing: 10
 
@@ -162,6 +159,8 @@ Scope {
                         font.pixelSize: 14
                         font.bold: true
                         color: "#ffffff"
+                        style: Text.Outline
+                        styleColor: "#aa000000"
                         elide: Text.ElideRight
                     }
 
@@ -172,7 +171,9 @@ Scope {
                         text: root.artist
                         font.family: Theme.fontFamily
                         font.pixelSize: 12
-                        color: Theme.textDim
+                        color: "#e6ffffff"
+                        style: Text.Outline
+                        styleColor: "#aa000000"
                         elide: Text.ElideRight
                     }
                 }
@@ -191,7 +192,7 @@ Scope {
                             width: parent.width
                             height: 5
                             radius: 3
-                            color: Theme.surfaceContainerHigh
+                            color: "#66000000"
 
                             Rectangle {
                                 readonly property real ratio: root.lenSec > 0 ? Math.min(1, Math.max(0, root.posSec / root.lenSec)) : 0
@@ -215,15 +216,19 @@ Scope {
                         Text {
                             text: root.fmtTime(root.posSec)
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            color: Theme.textDim
+                            font.pixelSize: 11
+                            color: "#e6ffffff"
+                            style: Text.Outline
+                            styleColor: "#aa000000"
                             Layout.fillWidth: true
                         }
                         Text {
                             text: root.fmtTime(root.lenSec)
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            color: Theme.textDim
+                            font.pixelSize: 11
+                            color: "#e6ffffff"
+                            style: Text.Outline
+                            styleColor: "#aa000000"
                         }
                     }
                 }
@@ -231,11 +236,11 @@ Scope {
                 // Media Controls
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 16
+                    spacing: 18
 
                     Rectangle {
                         width: 34; height: 34; radius: 17
-                        color: Theme.surfaceContainerHigh
+                        color: "#55000000"
                         Text { anchors.centerIn: parent; text: "󰒮"; font.family: Theme.fontFamily; font.pixelSize: 14; color: "#ffffff" }
                         MouseArea { anchors.fill: parent; onClicked: root.mediaCmd("previous") }
                     }
@@ -253,7 +258,7 @@ Scope {
                     }
                     Rectangle {
                         width: 34; height: 34; radius: 17
-                        color: Theme.surfaceContainerHigh
+                        color: "#55000000"
                         Text { anchors.centerIn: parent; text: "󰒭"; font.family: Theme.fontFamily; font.pixelSize: 14; color: "#ffffff" }
                         MouseArea { anchors.fill: parent; onClicked: root.mediaCmd("next") }
                     }
