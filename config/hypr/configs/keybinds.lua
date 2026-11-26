@@ -13,6 +13,7 @@ hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + W",      hl.dsp.exec_cmd("qs ipc call wallpaper toggle"))
+hl.bind(mainMod .. " + V",      hl.dsp.exec_cmd("qs ipc call clipboard toggle"))
 hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
 
 -- Window Management

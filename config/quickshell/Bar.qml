@@ -123,7 +123,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call calendar toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call calendar toggle"])
                 }
             }
 
@@ -232,7 +232,7 @@ PanelWindow {
                         if (mouse.button === Qt.MiddleButton || mouse.button === Qt.RightButton) {
                             bar.runAction("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
                         } else {
-                            Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth brightness calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call audio toggle"])
+                            Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth brightness calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call audio toggle"])
                         }
                     }
                     onWheel: (wheel) => {
@@ -260,7 +260,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call brightness toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call brightness toggle"])
                     onWheel: (wheel) => {
                         if (wheel.angleDelta.y > 0) bar.runAction("brightnessctl -q set +5%")
                         else bar.runAction("brightnessctl -q set 5%-")
@@ -286,7 +286,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in bluetooth audio brightness calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call wifi toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in bluetooth audio brightness calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call wifi toggle"])
                 }
             }
 
@@ -308,7 +308,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi audio brightness calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call bluetooth toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi audio brightness calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call bluetooth toggle"])
                 }
             }
 
@@ -327,6 +327,11 @@ PanelWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
                     color: (!bar.batCharging && bar.batPct <= 20) ? Theme.error : "#ffffff"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call battery toggle"])
                 }
             }
         }

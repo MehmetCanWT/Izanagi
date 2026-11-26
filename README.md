@@ -29,7 +29,8 @@ Izanagi/
 - **Bar:** Date/time (click for Calendar & MPRIS), open workspaces, System Tray, Volume/Brightness/Wi-Fi/Bluetooth/Battery.
 - **Launcher (`SUPER + Space`):** Live app search & launch (`DesktopEntries`).
 - **WallpaperPicker (`SUPER + W`):** Infinite horizontal carousel (`A`/`D`, `←`/`→`, `Space`/`Enter`) + Matugen theming.
-- **Control Menus:** Wi-Fi, Bluetooth, Audio (sink/mic), Brightness, Calendar + MPRIS Media.
+- **ClipboardMenu (`SUPER + V`):** Searchable `cliphist` history + one-click copy / clear.
+- **Control Menus:** Wi-Fi, Bluetooth, Audio (sink/mic), Brightness, Battery (profiles + 80% lock), Calendar + MPRIS Media.
 - **OSD & Notifications:** Native `NotificationServer` (bottom-right) + Volume/Brightness OSD.
 
 ## Keybinds (`SUPER` = Windows Key)

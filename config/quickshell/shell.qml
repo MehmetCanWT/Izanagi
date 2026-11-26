@@ -11,4 +11,6 @@ ShellRoot {
     BrightnessMenu { onChanged: bar.refreshStats() }
     Osd {}
     CalendarMediaMenu {}
+    BatteryMenu { onChanged: bar.refreshStats() }
+    ClipboardMenu {}
 }

@@ -9,3 +9,5 @@ AudioMenu 1.0 AudioMenu.qml
 BrightnessMenu 1.0 BrightnessMenu.qml
 Osd 1.0 Osd.qml
 CalendarMediaMenu 1.0 CalendarMediaMenu.qml
+BatteryMenu 1.0 BatteryMenu.qml
+ClipboardMenu 1.0 ClipboardMenu.qml

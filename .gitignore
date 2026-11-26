@@ -1,4 +1,4 @@
-# Generated dynamic theme files
+# Generated dynamic theme & runtime cache files
 config/quickshell/colors.json
 config/hypr/configs/theme.lua
 config/hypr/configs/hyprlock-colors.conf
@@ -6,7 +6,9 @@ config/hypr/hyprpaper.conf
 config/ghostty/theme.ghostty
 config/gtk-3.0/colors.css
 config/gtk-4.0/colors.css
+config/rustfetch/logos/*.color
 
-# Backups & OS noise
+# Backups, logs & OS noise
 *.bak
+*.log
 .DS_Store
