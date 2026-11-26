@@ -32,6 +32,7 @@ Izanagi/
 - **ClipboardMenu (`SUPER + V`):** Searchable `cliphist` history + one-click copy / clear.
 - **Control Menus:** Wi-Fi, Bluetooth, Audio (sink/mic), Brightness, Battery (profiles + 80% lock), Calendar + MPRIS Media.
 - **OSD & Notifications:** Native `NotificationServer` (bottom-right) + Volume/Brightness OSD.
+- **Desktop Widgets (`WlrLayer.Bottom`):** Minimal Clock & Date, Now Playing (MPRIS + cover art), System Monitor (CPU / RAM / Temp).
 
 ## Keybinds (`SUPER` = Windows Key)
 

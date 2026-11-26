@@ -15,4 +15,7 @@ ShellRoot {
     BatteryMenu { onChanged: bar.refreshStats() }
     ClipboardMenu {}
     KeybindsMenu {}
+    DesktopClock {}
+    DesktopMusic {}
+    DesktopSysMon {}
 }

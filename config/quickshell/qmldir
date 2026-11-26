@@ -12,3 +12,6 @@ CalendarMediaMenu 1.0 CalendarMediaMenu.qml
 BatteryMenu 1.0 BatteryMenu.qml
 ClipboardMenu 1.0 ClipboardMenu.qml
 KeybindsMenu 1.0 KeybindsMenu.qml
+DesktopClock 1.0 DesktopClock.qml
+DesktopMusic 1.0 DesktopMusic.qml
+DesktopSysMon 1.0 DesktopSysMon.qml
