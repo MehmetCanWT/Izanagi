@@ -120,12 +120,13 @@ Scope {
                         }
                     }
 
-                    Image {
+                    AnimatedImage {
                         id: coverImg
                         anchors.fill: parent
                         source: root.artUrl
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
+                        playing: root.status === "Playing"
                         visible: false
                     }
 
