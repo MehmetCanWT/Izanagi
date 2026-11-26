@@ -273,7 +273,7 @@ PanelWindow {
                     onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call brightness toggle"])
                     onWheel: (wheel) => {
                         if (wheel.angleDelta.y > 0) bar.runAction("brightnessctl -q set +5%")
-                        else bar.runAction("m=$(($(brightnessctl m)/100)); [ $m -lt 1 ] && m=1; brightnessctl -q -n $m set 5%-")
+                        else bar.runAction("m=$(($(brightnessctl m)/100)); [ $m -lt 1 ] && m=1; brightnessctl -q --min-value=$m set 5%-")
                     }
                 }
             }
