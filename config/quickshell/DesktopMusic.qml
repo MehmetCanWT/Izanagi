@@ -16,6 +16,87 @@ Scope {
     property real posSec: 0
     property real lenSec: 0
 
+    // Sonata synced lyrics state
+    property var lyricsLines: []
+    property int activeLyricIndex: -1
+    property var visibleLyrics: []
+
+    readonly property string sonataRuntimeDir: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
+
+    function updateVisibleLyrics() {
+        const lines = root.lyricsLines
+        if (!lines || lines.length === 0) {
+            root.visibleLyrics = []
+            return
+        }
+        const total = lines.length
+        const maxRows = 5
+        const idx = root.activeLyricIndex >= 0 ? root.activeLyricIndex : 0
+        let start = Math.max(0, idx - 2)
+        let end = start + maxRows
+        if (end > total) {
+            end = total
+            start = Math.max(0, end - maxRows)
+        }
+        const out = []
+        for (let i = start; i < end; i++) {
+            const line = lines[i]
+            if (!line || !line.text) continue
+            const dist = Math.abs(i - idx)
+            out.push({
+                idx: i,
+                text: line.text,
+                isActive: i === idx,
+                dist: dist
+            })
+        }
+        root.visibleLyrics = out
+    }
+
+    FileView {
+        id: lyricsFile
+        path: root.sonataRuntimeDir + "/sonata/lyrics.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const data = JSON.parse(text())
+                if (data && Array.isArray(data.lines) && data.lines.length > 0 && (data.state === "Synced" || data.state === "Plain")) {
+                    root.lyricsLines = data.lines
+                    if (typeof data.active_index === "number") {
+                        root.activeLyricIndex = data.active_index
+                    }
+                } else {
+                    root.lyricsLines = []
+                    root.activeLyricIndex = -1
+                }
+                root.updateVisibleLyrics()
+            } catch (e) {
+                // Ignore transient write
+            }
+        }
+    }
+
+    FileView {
+        id: nowPlayingFile
+        path: root.sonataRuntimeDir + "/sonata/now_playing.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const data = JSON.parse(text())
+                if (data && data.lyrics && typeof data.lyrics.active_index === "number") {
+                    if (root.activeLyricIndex !== data.lyrics.active_index) {
+                        root.activeLyricIndex = data.lyrics.active_index
+                        root.updateVisibleLyrics()
+                    }
+                }
+            } catch (e) {
+                // Ignore transient write
+            }
+        }
+    }
+
     function fmtTime(sec) {
         if (!sec || sec < 0) return "0:00"
         const s = Math.floor(sec)
@@ -104,58 +185,111 @@ Scope {
                 }
                 spacing: 10
 
-                // Large Square Cover Art
+                // Large Square Cover Art + Soft 5-Line Lyrics Overlay
                 Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 256
 
-                    Rectangle {
+                    Item {
+                        id: coverVisual
                         anchors.fill: parent
-                        radius: 14
-                        color: Theme.surfaceContainer
-                        visible: root.artUrl.length === 0
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰎈"
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 48
-                            color: Theme.accent
+
+                        Rectangle {
+                            anchors.fill: parent
+                            color: Theme.surfaceContainer
+                            visible: root.artUrl.length === 0
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰎈"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 48
+                                color: Theme.accent
+                            }
                         }
-                    }
 
-                    AnimatedImage {
-                        id: coverImg
-                        anchors.fill: parent
-                        source: !root.isVideo ? root.artUrl : ""
-                        fillMode: Image.PreserveAspectCrop
-                        playing: root.status === "Playing"
-                        visible: false
-                    }
-
-                    MediaPlayer {
-                        id: coverPlayer
-                        source: root.isVideo ? root.artUrl : ""
-                        loops: MediaPlayer.Infinite
-                        audioOutput: AudioOutput { muted: true }
-                        videoOutput: coverVideo
-                        Component.onCompleted: if (root.isVideo && root.status === "Playing") play()
-                        onSourceChanged: if (root.isVideo && root.status === "Playing") play()
-                    }
-
-                    Connections {
-                        target: root
-                        function onStatusChanged() {
-                            if (!root.isVideo) return
-                            if (root.status === "Playing") coverPlayer.play()
-                            else coverPlayer.pause()
+                        AnimatedImage {
+                            id: coverImg
+                            anchors.fill: parent
+                            source: !root.isVideo ? root.artUrl : ""
+                            fillMode: Image.PreserveAspectCrop
+                            playing: root.status === "Playing"
+                            visible: root.artUrl.length > 0 && !root.isVideo
                         }
-                    }
 
-                    VideoOutput {
-                        id: coverVideo
-                        anchors.fill: parent
-                        fillMode: VideoOutput.PreserveAspectCrop
-                        visible: false
+                        MediaPlayer {
+                            id: coverPlayer
+                            source: root.isVideo ? root.artUrl : ""
+                            loops: MediaPlayer.Infinite
+                            audioOutput: AudioOutput { muted: true }
+                            videoOutput: coverVideo
+                            Component.onCompleted: if (root.isVideo && root.status === "Playing") play()
+                            onSourceChanged: if (root.isVideo && root.status === "Playing") play()
+                        }
+
+                        Connections {
+                            target: root
+                            function onStatusChanged() {
+                                if (!root.isVideo) return
+                                if (root.status === "Playing") coverPlayer.play()
+                                else coverPlayer.pause()
+                            }
+                        }
+
+                        VideoOutput {
+                            id: coverVideo
+                            anchors.fill: parent
+                            fillMode: VideoOutput.PreserveAspectCrop
+                            visible: root.artUrl.length > 0 && root.isVideo
+                        }
+
+                        // Soft dark gradient scrim when lyrics are visible
+                        Rectangle {
+                            anchors.fill: parent
+                            opacity: root.visibleLyrics.length > 0 ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "#44000000" }
+                                GradientStop { position: 0.5; color: "#88000000" }
+                                GradientStop { position: 1.0; color: "#aa000000" }
+                            }
+                        }
+
+                        // Max 5-line synced lyrics overlay with soft transitions
+                        Column {
+                            visible: root.visibleLyrics.length > 0
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: 14
+                                rightMargin: 14
+                            }
+                            spacing: 7
+
+                            Repeater {
+                                model: root.visibleLyrics
+                                delegate: Text {
+                                    required property var modelData
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 2
+                                    elide: Text.ElideRight
+                                    text: modelData.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: modelData.isActive ? 13 : 11
+                                    font.bold: modelData.isActive
+                                    color: modelData.isActive ? "#ffffff" : "#d9ffffff"
+                                    style: Text.Outline
+                                    styleColor: "#bb000000"
+                                    opacity: modelData.isActive ? 1.0 : (modelData.dist === 1 ? 0.68 : 0.36)
+                                    scale: modelData.isActive ? 1.04 : 0.96
+
+                                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -168,16 +302,7 @@ Scope {
 
                     MultiEffect {
                         anchors.fill: parent
-                        visible: root.artUrl.length > 0 && !root.isVideo
-                        source: coverImg
-                        maskEnabled: true
-                        maskSource: coverMask
-                    }
-
-                    MultiEffect {
-                        anchors.fill: parent
-                        visible: root.artUrl.length > 0 && root.isVideo
-                        source: coverVideo
+                        source: coverVisual
                         maskEnabled: true
                         maskSource: coverMask
                     }
