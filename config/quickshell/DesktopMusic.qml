@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtMultimedia
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -11,6 +12,7 @@ Scope {
     property string title: ""
     property string artist: ""
     property string artUrl: ""
+    readonly property bool isVideo: /\.(mp4|webm|mkv|mov)(\?.*)?$/i.test(artUrl)
     property real posSec: 0
     property real lenSec: 0
 
@@ -123,10 +125,35 @@ Scope {
                     AnimatedImage {
                         id: coverImg
                         anchors.fill: parent
-                        source: root.artUrl
+                        source: !root.isVideo ? root.artUrl : ""
                         fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
                         playing: root.status === "Playing"
+                        visible: false
+                    }
+
+                    MediaPlayer {
+                        id: coverPlayer
+                        source: root.isVideo ? root.artUrl : ""
+                        loops: MediaPlayer.Infinite
+                        audioOutput: AudioOutput { muted: true }
+                        videoOutput: coverVideo
+                        Component.onCompleted: if (root.isVideo && root.status === "Playing") play()
+                        onSourceChanged: if (root.isVideo && root.status === "Playing") play()
+                    }
+
+                    Connections {
+                        target: root
+                        function onStatusChanged() {
+                            if (!root.isVideo) return
+                            if (root.status === "Playing") coverPlayer.play()
+                            else coverPlayer.pause()
+                        }
+                    }
+
+                    VideoOutput {
+                        id: coverVideo
+                        anchors.fill: parent
+                        fillMode: VideoOutput.PreserveAspectCrop
                         visible: false
                     }
 
@@ -140,8 +167,16 @@ Scope {
 
                     MultiEffect {
                         anchors.fill: parent
-                        visible: root.artUrl.length > 0
+                        visible: root.artUrl.length > 0 && !root.isVideo
                         source: coverImg
+                        maskEnabled: true
+                        maskSource: coverMask
+                    }
+
+                    MultiEffect {
+                        anchors.fill: parent
+                        visible: root.artUrl.length > 0 && root.isVideo
+                        source: coverVideo
                         maskEnabled: true
                         maskSource: coverMask
                     }
