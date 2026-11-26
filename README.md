@@ -37,6 +37,8 @@ Izanagi/
 
 - `SUPER + Space` — Quickshell Launcher
 - `SUPER + W` — Quickshell Wallpaper Picker
+- `SUPER + V` — Quickshell Clipboard History
+- `SUPER + K` — Quickshell Keybinds Menu
 - `SUPER + Return` — Ghostty Terminal
 - `SUPER + E` — Dolphin File Manager
 - `SUPER + B` — Zen Browser

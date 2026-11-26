@@ -11,3 +11,4 @@ Osd 1.0 Osd.qml
 CalendarMediaMenu 1.0 CalendarMediaMenu.qml
 BatteryMenu 1.0 BatteryMenu.qml
 ClipboardMenu 1.0 ClipboardMenu.qml
+KeybindsMenu 1.0 KeybindsMenu.qml

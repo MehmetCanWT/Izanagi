@@ -13,4 +13,5 @@ ShellRoot {
     CalendarMediaMenu {}
     BatteryMenu { onChanged: bar.refreshStats() }
     ClipboardMenu {}
+    KeybindsMenu {}
 }
