@@ -11,11 +11,11 @@ Scope {
 
     PanelWindow {
         anchors {
-            bottom: true
+            top: true
             left: true
         }
         margins {
-            bottom: 28
+            top: 52
             left: 28
         }
         implicitWidth: col.implicitWidth
