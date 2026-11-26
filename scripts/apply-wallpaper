@@ -13,7 +13,20 @@ else
     setsid -f hyprpaper >/dev/null 2>&1
 fi
 
-# 2. Generate detailed Material You 3 palette via matugen
+# 2. Pick the most vibrant source color (avoid dark/blue background bias) & apply Material You 3
 if command -v matugen >/dev/null 2>&1 && [ -f "$HOME/.config/matugen/config.toml" ]; then
-    matugen image "$WP" -m dark --source-color-index 0 -c "$HOME/.config/matugen/config.toml" >/dev/null 2>&1 || true
+    idx=$(matugen image "$WP" --show-source-colors 2>/dev/null | python3 -c '
+import sys, colorsys
+best_i, best_score = 0, -1.0
+for i, line in enumerate(sys.stdin):
+    h = line.strip().lstrip("#")
+    if len(h) != 6: continue
+    r, g, b = (int(h[k:k+2], 16) / 255.0 for k in (0, 2, 4))
+    _, s, v = colorsys.rgb_to_hsv(r, g, b)
+    score = s * (0.4 + 0.6 * v)
+    if score > best_score:
+        best_score, best_i = score, i
+print(best_i)
+' 2>/dev/null || echo 0)
+    matugen image "$WP" -m dark -t scheme-fidelity --source-color-index "$idx" -c "$HOME/.config/matugen/config.toml" >/dev/null 2>&1 || true
 fi
