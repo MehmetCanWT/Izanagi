@@ -11,6 +11,8 @@ Scope {
     property bool open: false
     property int currentIndex: 0
     property var windows: []
+    readonly property int cols: Math.max(1, Math.min(4, windows.length))
+    readonly property int rows: Math.max(1, Math.min(3, Math.ceil(windows.length / cols)))
 
     IpcHandler {
         target: "switcher"
@@ -60,7 +62,7 @@ Scope {
             const win = root.windows[root.currentIndex]
             const addr = win.address ? String(win.address) : ""
             if (addr.length > 0) {
-                const hex = addr.startsWith("0x") ? addr : ("0x" + Number(addr).toString(16))
+                const hex = addr.startsWith("0x") ? addr : ("0x" + addr)
                 Hyprland.dispatch("hl.dsp.focus({ window = \"address:" + hex + "\" })")
             }
         }
@@ -84,13 +86,10 @@ Scope {
             onClicked: root.open = false
         }
 
-        readonly property int cols: Math.max(1, Math.min(4, root.windows.length))
-        readonly property int rows: Math.max(1, Math.min(3, Math.ceil(root.windows.length / cols)))
-
         Rectangle {
             anchors.centerIn: parent
-            width: cols * 276 + 24
-            height: rows * 204 + 24
+            width: root.cols * 276 + 24
+            height: root.rows * 204 + 24
             radius: 18
             color: Theme.bg
             border.width: 1
