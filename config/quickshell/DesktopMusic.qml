@@ -165,8 +165,8 @@ Scope {
             bottom: 28
             right: 28
         }
-        implicitWidth: 280
-        implicitHeight: col.implicitHeight + 24
+        implicitWidth: 300
+        implicitHeight: col.implicitHeight + 20
         color: "transparent"
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.exclusiveZone: -1
@@ -183,12 +183,43 @@ Scope {
                     top: parent.top
                     margins: 6
                 }
-                spacing: 10
+                spacing: 12
 
-                // Large Square Cover Art + Soft 5-Line Lyrics Overlay
+                // Max 5-line synced lyrics above the artwork
+                Column {
+                    visible: root.visibleLyrics.length > 0
+                    Layout.fillWidth: true
+                    spacing: 5
+
+                    Repeater {
+                        model: root.visibleLyrics
+                        delegate: Text {
+                            required property var modelData
+                            width: parent.width
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
+                            text: modelData.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: modelData.isActive ? 13 : 11
+                            font.bold: modelData.isActive
+                            color: modelData.isActive ? "#ffffff" : "#d9ffffff"
+                            style: Text.Outline
+                            styleColor: "#bb000000"
+                            opacity: modelData.isActive ? 1.0 : (modelData.dist === 1 ? 0.68 : 0.36)
+                            scale: modelData.isActive ? 1.04 : 0.96
+
+                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                            Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                        }
+                    }
+                }
+
+                // Large Square Cover Art
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 256
+                    Layout.preferredHeight: 268
 
                     Item {
                         id: coverVisual
@@ -240,55 +271,6 @@ Scope {
                             anchors.fill: parent
                             fillMode: VideoOutput.PreserveAspectCrop
                             visible: root.artUrl.length > 0 && root.isVideo
-                        }
-
-                        // Soft dark gradient scrim when lyrics are visible
-                        Rectangle {
-                            anchors.fill: parent
-                            opacity: root.visibleLyrics.length > 0 ? 1.0 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: "#44000000" }
-                                GradientStop { position: 0.5; color: "#88000000" }
-                                GradientStop { position: 1.0; color: "#aa000000" }
-                            }
-                        }
-
-                        // Max 5-line synced lyrics overlay with soft transitions
-                        Column {
-                            visible: root.visibleLyrics.length > 0
-                            anchors {
-                                left: parent.left
-                                right: parent.right
-                                verticalCenter: parent.verticalCenter
-                                leftMargin: 14
-                                rightMargin: 14
-                            }
-                            spacing: 7
-
-                            Repeater {
-                                model: root.visibleLyrics
-                                delegate: Text {
-                                    required property var modelData
-                                    width: parent.width
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 2
-                                    elide: Text.ElideRight
-                                    text: modelData.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: modelData.isActive ? 13 : 11
-                                    font.bold: modelData.isActive
-                                    color: modelData.isActive ? "#ffffff" : "#d9ffffff"
-                                    style: Text.Outline
-                                    styleColor: "#bb000000"
-                                    opacity: modelData.isActive ? 1.0 : (modelData.dist === 1 ? 0.68 : 0.36)
-                                    scale: modelData.isActive ? 1.04 : 0.96
-
-                                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                                    Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                                }
-                            }
                         }
                     }
 
