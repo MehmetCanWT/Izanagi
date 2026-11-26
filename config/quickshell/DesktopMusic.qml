@@ -49,7 +49,8 @@ Scope {
             "st=$(playerctl status 2>/dev/null || true); " +
             "t=$(playerctl metadata title 2>/dev/null || true); " +
             "a=$(playerctl metadata artist 2>/dev/null || true); " +
-            "art=$(playerctl metadata mpris:artUrl 2>/dev/null || true); " +
+            "art=$(playerctl metadata sonata:motionArtUrl 2>/dev/null || true); " +
+            "[ -n \"$art\" ] || art=$(playerctl metadata mpris:artUrl 2>/dev/null || true); " +
             "pos=$(playerctl position 2>/dev/null || echo 0); " +
             "len=$(playerctl metadata mpris:length 2>/dev/null || echo 0); " +
             "printf '%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n' \"$st\" \"$t\" \"$a\" \"$art\" \"$pos\" \"$len\""
