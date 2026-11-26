@@ -225,6 +225,9 @@ Scope {
                             anchors.fill: parent
                             source: !root.isVideo ? root.artUrl : ""
                             fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: false
+                            sourceSize: Qt.size(512, 512)
                             playing: root.status === "Playing"
                             visible: root.artUrl.length > 0 && !root.isVideo
                         }
@@ -236,7 +239,10 @@ Scope {
                             audioOutput: AudioOutput { muted: true }
                             videoOutput: coverVideo
                             Component.onCompleted: if (root.isVideo && root.status === "Playing") play()
-                            onSourceChanged: if (root.isVideo && root.status === "Playing") play()
+                            onSourceChanged: {
+                                if (root.isVideo && root.status === "Playing") play()
+                                else if (!root.isVideo || !root.artUrl) stop()
+                            }
                         }
 
                         Connections {

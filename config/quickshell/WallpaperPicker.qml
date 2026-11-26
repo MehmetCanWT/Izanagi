@@ -14,6 +14,16 @@ Scope {
     property string searchQuery: ""
     property string activeWallpaper: ""
 
+    onOpenChanged: {
+        if (!open) {
+            searchOpen = false
+            searchQuery = ""
+            allWallpapers = []
+            filteredWallpapers = []
+            Qt.callLater(gc)
+        }
+    }
+
     IpcHandler {
         target: "wallpaper"
         function toggle(): void {
@@ -191,7 +201,7 @@ Scope {
                     highlightRangeMode: PathView.StrictlyEnforceRange
                     highlightMoveDuration: 220
                     snapMode: PathView.SnapToItem
-                    cacheItemCount: 4
+                    cacheItemCount: 2
 
                     path: Path {
                         startX: 160
@@ -231,10 +241,10 @@ Scope {
                         Image {
                             id: wpImg
                             anchors.fill: parent
-                            source: "file://" + modelData
+                            source: root.open ? ("file://" + modelData) : ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
-                            cache: true
+                            cache: false
                             visible: false
                             sourceSize: Qt.size(960, 560)
                         }

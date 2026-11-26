@@ -14,6 +14,13 @@ Scope {
     readonly property int cols: Math.max(1, Math.min(4, windows.length))
     readonly property int rows: Math.max(1, Math.min(3, Math.ceil(windows.length / cols)))
 
+    onOpenChanged: {
+        if (!open) {
+            windows = []
+            Qt.callLater(gc)
+        }
+    }
+
     IpcHandler {
         target: "switcher"
         function next(): void {
@@ -214,7 +221,7 @@ Scope {
 
                                     ScreencopyView {
                                         anchors.centerIn: parent
-                                        captureSource: modelData.wayland
+                                        captureSource: root.open ? modelData.wayland : null
                                         live: root.open
                                         constraintSize: Qt.size(previewWrap.width, previewWrap.height)
                                     }

@@ -11,6 +11,15 @@ Scope {
     property var allBinds: []
     property var filteredBinds: []
 
+    onOpenChanged: {
+        if (!open) {
+            query = ""
+            allBinds = []
+            filteredBinds = []
+            Qt.callLater(gc)
+        }
+    }
+
     IpcHandler {
         target: "keybinds"
         function toggle(): void {

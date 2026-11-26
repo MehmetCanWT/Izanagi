@@ -9,6 +9,13 @@ Scope {
     property bool open: false
     property string query: ""
 
+    onOpenChanged: {
+        if (!open) {
+            query = ""
+            Qt.callLater(gc)
+        }
+    }
+
     IpcHandler {
         target: "launcher"
         function toggle(): void {
@@ -42,6 +49,7 @@ Scope {
     ScriptModel {
         id: filteredModel
         values: {
+            if (!root.open) return []
             const q = root.query.trim().toLowerCase()
             const apps = [...DesktopEntries.applications.values]
             apps.sort((a, b) => a.name.localeCompare(b.name))

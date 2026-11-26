@@ -12,6 +12,15 @@ Scope {
     property var filteredItems: []
     readonly property string thumbDir: Quickshell.env("HOME") + "/.cache/cliphist-thumbs"
 
+    onOpenChanged: {
+        if (!open) {
+            query = ""
+            allItems = []
+            filteredItems = []
+            Qt.callLater(gc)
+        }
+    }
+
     IpcHandler {
         target: "clipboard"
         function toggle(): void {
