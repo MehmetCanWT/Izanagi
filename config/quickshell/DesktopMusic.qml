@@ -19,39 +19,8 @@ Scope {
     // Sonata synced lyrics state
     property var lyricsLines: []
     property int activeLyricIndex: -1
-    property var visibleLyrics: []
 
     readonly property string sonataRuntimeDir: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
-
-    function updateVisibleLyrics() {
-        const lines = root.lyricsLines
-        if (!lines || lines.length === 0) {
-            root.visibleLyrics = []
-            return
-        }
-        const total = lines.length
-        const maxRows = 5
-        const idx = root.activeLyricIndex >= 0 ? root.activeLyricIndex : 0
-        let start = Math.max(0, idx - 2)
-        let end = start + maxRows
-        if (end > total) {
-            end = total
-            start = Math.max(0, end - maxRows)
-        }
-        const out = []
-        for (let i = start; i < end; i++) {
-            const line = lines[i]
-            if (!line || !line.text) continue
-            const dist = Math.abs(i - idx)
-            out.push({
-                idx: i,
-                text: line.text,
-                isActive: i === idx,
-                dist: dist
-            })
-        }
-        root.visibleLyrics = out
-    }
 
     FileView {
         id: lyricsFile
@@ -70,7 +39,6 @@ Scope {
                     root.lyricsLines = []
                     root.activeLyricIndex = -1
                 }
-                root.updateVisibleLyrics()
             } catch (e) {
                 // Ignore transient write
             }
@@ -86,10 +54,7 @@ Scope {
             try {
                 const data = JSON.parse(text())
                 if (data && data.lyrics && typeof data.lyrics.active_index === "number") {
-                    if (root.activeLyricIndex !== data.lyrics.active_index) {
-                        root.activeLyricIndex = data.lyrics.active_index
-                        root.updateVisibleLyrics()
-                    }
+                    root.activeLyricIndex = data.lyrics.active_index
                 }
             } catch (e) {
                 // Ignore transient write
@@ -166,7 +131,7 @@ Scope {
             right: 28
         }
         implicitWidth: 300
-        implicitHeight: col.implicitHeight + 20
+        implicitHeight: col.implicitHeight + 16
         color: "transparent"
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.exclusiveZone: -1
@@ -185,33 +150,50 @@ Scope {
                 }
                 spacing: 12
 
-                // Max 5-line synced lyrics above the artwork
-                Column {
-                    visible: root.visibleLyrics.length > 0
+                // Smooth fixed-height 5-line scrolling lyrics above artwork (never shifts layout)
+                ListView {
+                    id: lyricsList
+                    visible: root.lyricsLines.length > 0
                     Layout.fillWidth: true
-                    spacing: 5
+                    Layout.preferredHeight: 120
+                    clip: true
+                    interactive: false
+                    model: root.lyricsLines
+                    currentIndex: root.activeLyricIndex >= 0 ? root.activeLyricIndex : 0
+                    preferredHighlightBegin: height / 2 - 12
+                    preferredHighlightEnd: height / 2 + 12
+                    highlightRangeMode: ListView.StrictlyEnforceRange
+                    highlightMoveDuration: 420
+                    spacing: 0
 
-                    Repeater {
-                        model: root.visibleLyrics
-                        delegate: Text {
-                            required property var modelData
-                            width: parent.width
+                    delegate: Item {
+                        required property var modelData
+                        required property int index
+                        readonly property int dist: Math.abs(index - (root.activeLyricIndex >= 0 ? root.activeLyricIndex : 0))
+                        readonly property bool isActive: dist === 0
+
+                        width: lyricsList.width
+                        height: 24
+
+                        Text {
+                            anchors.centerIn: parent
+                            width: parent.width - 8
                             horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
-                            maximumLineCount: 2
+                            verticalAlignment: Text.AlignVCenter
                             elide: Text.ElideRight
-                            text: modelData.text
+                            text: (modelData && modelData.text) ? modelData.text : ""
                             font.family: Theme.fontFamily
-                            font.pixelSize: modelData.isActive ? 13 : 11
-                            font.bold: modelData.isActive
-                            color: modelData.isActive ? "#ffffff" : "#d9ffffff"
+                            font.pixelSize: 12
+                            font.bold: isActive
+                            color: isActive ? "#ffffff" : "#d9ffffff"
                             style: Text.Outline
                             styleColor: "#bb000000"
-                            opacity: modelData.isActive ? 1.0 : (modelData.dist === 1 ? 0.68 : 0.36)
-                            scale: modelData.isActive ? 1.04 : 0.96
+                            opacity: dist === 0 ? 1.0 : (dist === 1 ? 0.62 : (dist === 2 ? 0.28 : 0.0))
+                            scale: dist === 0 ? 1.06 : (dist === 1 ? 0.95 : 0.88)
 
-                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                            Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                            Behavior on opacity { NumberAnimation { duration: 380; easing.type: Easing.InOutCubic } }
+                            Behavior on scale { NumberAnimation { duration: 380; easing.type: Easing.InOutCubic } }
+                            Behavior on color { ColorAnimation { duration: 320 } }
                         }
                     }
                 }
