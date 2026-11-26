@@ -49,6 +49,14 @@ hl.window_rule({
     center = true,
 })
 
+hl.window_rule({
+    name   = "float-luciole",
+    match  = { class = "^(luciole|dev\\.noctalia\\.luciole)$" },
+    float  = true,
+    size   = "1280 720",
+    center = true,
+})
+
 -- Steam / Proton / Linux Games: tearing + no blur/shadow/anim for low latency
 hl.window_rule({
     name      = "games-low-latency",

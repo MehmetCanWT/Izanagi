@@ -8,7 +8,7 @@
 WT_DEFAULTS = {
     mod          = "SUPER",
     terminal     = "ghostty",
-    file_manager = "dolphin",
+    file_manager = "luciole",
     browser      = "zen-browser",
     launcher     = "qs ipc call launcher toggle",
 }

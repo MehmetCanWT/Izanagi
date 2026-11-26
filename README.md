@@ -51,7 +51,7 @@ cd ~/Code/Izanagi && ./install.sh
 - `SUPER + K` — Quickshell Keybinds Menu
 - `ALT + Tab` / `ALT + SHIFT + Tab` — Live Window Switcher
 - `SUPER + Return` — Ghostty Terminal
-- `SUPER + E` — Dolphin File Manager
+- `SUPER + E` — Luciole File Manager
 - `SUPER + B` — Zen Browser
 - `SUPER + L` — Quickshell Lock Screen (`WlSessionLock` + PAM)
 - `SUPER + Q` — Close Open Shell Overlay or Active Window
