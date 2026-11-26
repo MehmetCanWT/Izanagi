@@ -1,0 +1,8 @@
+# Ghostty Terminal Configuration
+
+config-file = ?theme.ghostty
+font-family = 0xProto Nerd Font Mono
+window-decoration = false
+copy-on-select = both
+window-width = 120
+window-height = 30

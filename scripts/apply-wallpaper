@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WP="${1:-}"
+[ -n "$WP" ] && [ -f "$WP" ] || { echo "Usage: $0 <wallpaper-path>" >&2; exit 1; }
+
+# 1. Persist & apply wallpaper via hyprpaper
+printf '# Hyprpaper 0.8+ Block Syntax Configuration\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$WP" > "$HOME/.config/hypr/hyprpaper.conf"
+
+if pgrep -x hyprpaper >/dev/null 2>&1; then
+    hyprctl hyprpaper wallpaper ",$WP,cover" >/dev/null 2>&1 || true
+else
+    setsid -f hyprpaper >/dev/null 2>&1
+fi
+
+# 2. Generate detailed Material You 3 palette via matugen
+if command -v matugen >/dev/null 2>&1 && [ -f "$HOME/.config/matugen/config.toml" ]; then
+    matugen image "$WP" -m dark --source-color-index 0 -c "$HOME/.config/matugen/config.toml" >/dev/null 2>&1 || true
+fi

@@ -1,0 +1,11 @@
+singleton Theme 1.0 Theme.qml
+Bar 1.0 Bar.qml
+WallpaperPicker 1.0 WallpaperPicker.qml
+Notifications 1.0 Notifications.qml
+Launcher 1.0 Launcher.qml
+WifiMenu 1.0 WifiMenu.qml
+BluetoothMenu 1.0 BluetoothMenu.qml
+AudioMenu 1.0 AudioMenu.qml
+BrightnessMenu 1.0 BrightnessMenu.qml
+Osd 1.0 Osd.qml
+CalendarMediaMenu 1.0 CalendarMediaMenu.qml

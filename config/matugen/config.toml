@@ -1,0 +1,28 @@
+[config]
+reload_apps = false
+
+[templates.quickshell]
+input_path  = "~/.config/matugen/templates/quickshell-colors.json"
+output_path = "~/.config/quickshell/colors.json"
+
+[templates.hyprland]
+input_path  = "~/.config/matugen/templates/hyprland-theme.lua"
+output_path = "~/.config/hypr/configs/theme.lua"
+post_hook   = "hyprctl reload >/dev/null 2>&1 || true"
+
+[templates.hyprlock]
+input_path  = "~/.config/matugen/templates/hyprlock-colors.conf"
+output_path = "~/.config/hypr/configs/hyprlock-colors.conf"
+
+[templates.ghostty]
+input_path  = "~/.config/matugen/templates/ghostty-theme"
+output_path = "~/.config/ghostty/theme.ghostty"
+post_hook   = "pkill -USR2 ghostty >/dev/null 2>&1 || true"
+
+[templates.gtk3]
+input_path  = "~/.config/matugen/templates/gtk-colors.css"
+output_path = "~/.config/gtk-3.0/colors.css"
+
+[templates.gtk4]
+input_path  = "~/.config/matugen/templates/gtk-colors.css"
+output_path = "~/.config/gtk-4.0/colors.css"
