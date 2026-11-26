@@ -186,16 +186,14 @@ PanelWindow {
                             menu: modelData.menu
                             anchor.window: bar
                             anchor.edges: Edges.Bottom
-                            anchor.rect.x: trayItem.mapToItem(null, 0, 0).x
-                            anchor.rect.y: trayItem.mapToItem(null, 0, 0).y
-                            anchor.rect.width: trayItem.width
-                            anchor.rect.height: trayItem.height
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             onClicked: (mouse) => {
+                                const pt = trayItem.mapToItem(null, 0, 0)
+                                trayMenu.anchor.rect = Qt.rect(pt.x, pt.y, trayItem.width, trayItem.height + 6)
                                 if (mouse.button === Qt.LeftButton) {
                                     if (modelData.onlyMenu && modelData.hasMenu) trayMenu.open()
                                     else modelData.activate()
