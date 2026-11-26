@@ -341,7 +341,29 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call battery toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar power; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call battery toggle"])
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: pwrLabel.implicitWidth + 14
+                Layout.preferredHeight: 22
+                radius: 6
+                color: Theme.surfaceAlt
+                clip: true
+
+                Text {
+                    id: pwrLabel
+                    anchors.centerIn: parent
+                    text: "⏻"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    color: Theme.error
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar battery; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call power toggle"])
                 }
             }
         }

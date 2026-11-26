@@ -18,4 +18,8 @@ ShellRoot {
     DesktopClock {}
     DesktopMusic {}
     DesktopSysMon {}
+    DesktopPhone {}
+    PowerMenu {}
+    WindowSwitcher {}
+    LockScreen {}
 }

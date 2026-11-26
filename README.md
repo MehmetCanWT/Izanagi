@@ -32,7 +32,8 @@ Izanagi/
 - **ClipboardMenu (`SUPER + V`):** Searchable `cliphist` history + one-click copy / clear.
 - **Control Menus:** Wi-Fi, Bluetooth, Audio (sink/mic), Brightness, Battery (profiles + 80% lock), Calendar + MPRIS Media.
 - **OSD & Notifications:** Native `NotificationServer` (bottom-right) + Volume/Brightness OSD.
-- **Desktop Widgets (`WlrLayer.Bottom`):** Minimal Clock & Date, Now Playing (MPRIS + cover art), System Monitor (CPU / RAM / Temp).
+- **Desktop Widgets (`WlrLayer.Bottom`):** Minimal Clock & Date, Now Playing (MPRIS + MP4 cover + 5-line synced lyrics), Phone Battery (KDE Connect), System Monitor (CPU / RAM / Temp).
+- **Session & Switcher:** Quickshell Lock Screen (`SUPER + L` via `WlSessionLock` + PAM), Power Menu, Window Switcher (`ALT + Tab`).
 
 ## Keybinds (`SUPER` = Windows Key)
 

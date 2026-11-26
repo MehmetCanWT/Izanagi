@@ -15,3 +15,7 @@ KeybindsMenu 1.0 KeybindsMenu.qml
 DesktopClock 1.0 DesktopClock.qml
 DesktopMusic 1.0 DesktopMusic.qml
 DesktopSysMon 1.0 DesktopSysMon.qml
+DesktopPhone 1.0 DesktopPhone.qml
+PowerMenu 1.0 PowerMenu.qml
+WindowSwitcher 1.0 WindowSwitcher.qml
+LockScreen 1.0 LockScreen.qml

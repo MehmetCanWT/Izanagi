@@ -15,7 +15,11 @@ hl.bind(mainMod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + W",      hl.dsp.exec_cmd("qs ipc call wallpaper toggle"))
 hl.bind(mainMod .. " + V",      hl.dsp.exec_cmd("qs ipc call clipboard toggle"))
 hl.bind(mainMod .. " + K",      hl.dsp.exec_cmd("qs ipc call keybinds toggle"))
-hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("qs ipc call lock lock"))
+
+-- Window Switcher (ALT + Tab)
+hl.bind("ALT + Tab",            hl.dsp.exec_cmd("qs ipc call switcher next"))
+hl.bind("ALT + SHIFT + Tab",    hl.dsp.exec_cmd("qs ipc call switcher prev"))
 
 -- Window Management
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("~/.config/hypr/scripts/smart-close.sh"))
