@@ -134,12 +134,11 @@ Scope {
         Rectangle {
             id: container
             anchors.centerIn: parent
-            width: Math.min(parent.width - 48, 1340)
-            height: root.searchOpen ? 410 : 370
+            width: Math.min(parent.width - 32, 1760)
+            height: root.searchOpen ? 480 : 440
             radius: 16
-            color: "#ea101015"
-            border.width: 1
-            border.color: "#2affffff"
+            color: "transparent"
+            border.width: 0
             focus: root.open
 
             Behavior on height {
@@ -188,12 +187,12 @@ Scope {
                 }
                 spacing: 10
 
-                // Tear-free infinite GPU-scaled carousel (fits cleanly inside container without clipping edges)
+                // Tear-free infinite GPU-scaled carousel
                 PathView {
                     id: carousel
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
+                    clip: false
                     model: root.filteredWallpapers
                     pathItemCount: Math.min(5, Math.max(1, root.filteredWallpapers.length))
                     preferredHighlightBegin: 0.5
@@ -204,7 +203,7 @@ Scope {
                     cacheItemCount: 2
 
                     path: Path {
-                        startX: 160
+                        startX: 200
                         startY: carousel.height / 2
                         PathAttribute { name: "cardScale"; value: 0.62 }
                         PathAttribute { name: "cardOpacity"; value: 0.65 }
@@ -219,7 +218,7 @@ Scope {
                         PathAttribute { name: "cardZ"; value: 20 }
 
                         PathLine {
-                            x: carousel.width - 160
+                            x: carousel.width - 200
                             y: carousel.height / 2
                         }
                         PathAttribute { name: "cardScale"; value: 0.62 }
@@ -232,8 +231,8 @@ Scope {
                         required property int index
                         readonly property bool isCurrent: PathView.isCurrentItem
 
-                        width: 480
-                        height: 290
+                        width: 600
+                        height: 360
                         scale: PathView.cardScale ?? 1.0
                         opacity: PathView.cardOpacity ?? 1.0
                         z: PathView.cardZ ?? 1
@@ -246,7 +245,7 @@ Scope {
                             asynchronous: true
                             cache: false
                             visible: false
-                            sourceSize: Qt.size(960, 560)
+                            sourceSize: Qt.size(1080, 648)
                         }
 
                         Rectangle {
