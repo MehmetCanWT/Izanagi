@@ -79,12 +79,12 @@ Scope {
     }
 
     function mediaCmd(arg) {
-        actProc.command = ["playerctl", arg]
+        actProc.command = ["playerctl", "-i", "kdeconnect", arg]
         actProc.running = true
     }
 
     function seekTo(sec) {
-        actProc.command = ["playerctl", "position", String(Math.max(0, Math.floor(sec)))]
+        actProc.command = ["playerctl", "-i", "kdeconnect", "position", String(Math.max(0, Math.floor(sec)))]
         actProc.running = true
     }
 
@@ -92,13 +92,13 @@ Scope {
         id: mediaProc
         command: [
             "sh", "-c",
-            "st=$(playerctl status 2>/dev/null || true); " +
-            "t=$(playerctl metadata title 2>/dev/null || true); " +
-            "a=$(playerctl metadata artist 2>/dev/null || true); " +
-            "art=$(playerctl metadata sonata:motionArtUrl 2>/dev/null || true); " +
-            "[ -n \"$art\" ] || art=$(playerctl metadata mpris:artUrl 2>/dev/null || true); " +
-            "pos=$(playerctl position 2>/dev/null || echo 0); " +
-            "len=$(playerctl metadata mpris:length 2>/dev/null || echo 0); " +
+            "st=$(playerctl -i kdeconnect status 2>/dev/null || true); " +
+            "t=$(playerctl -i kdeconnect metadata title 2>/dev/null || true); " +
+            "a=$(playerctl -i kdeconnect metadata artist 2>/dev/null || true); " +
+            "art=$(playerctl -i kdeconnect metadata sonata:motionArtUrl 2>/dev/null || true); " +
+            "[ -n \"$art\" ] || art=$(playerctl -i kdeconnect metadata mpris:artUrl 2>/dev/null || true); " +
+            "pos=$(playerctl -i kdeconnect position 2>/dev/null || echo 0); " +
+            "len=$(playerctl -i kdeconnect metadata mpris:length 2>/dev/null || echo 0); " +
             "printf '%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n' \"$st\" \"$t\" \"$a\" \"$art\" \"$pos\" \"$len\""
         ]
         stdout: StdioCollector {

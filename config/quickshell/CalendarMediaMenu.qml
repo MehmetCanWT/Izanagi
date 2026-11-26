@@ -37,7 +37,7 @@ Scope {
     }
 
     function mediaCmd(arg) {
-        mediaActionProc.command = ["playerctl", arg]
+        mediaActionProc.command = ["playerctl", "-i", "kdeconnect", arg]
         mediaActionProc.running = true
     }
 
@@ -52,9 +52,9 @@ Scope {
         id: mediaProc
         command: [
             "sh", "-c",
-            "st=$(playerctl status 2>/dev/null || true); " +
-            "t=$(playerctl metadata title 2>/dev/null || true); " +
-            "a=$(playerctl metadata artist 2>/dev/null || true); " +
+            "st=$(playerctl -i kdeconnect status 2>/dev/null || true); " +
+            "t=$(playerctl -i kdeconnect metadata title 2>/dev/null || true); " +
+            "a=$(playerctl -i kdeconnect metadata artist 2>/dev/null || true); " +
             "printf '%s\\n%s\\n%s\\n' \"$st\" \"$t\" \"$a\""
         ]
         stdout: StdioCollector {
