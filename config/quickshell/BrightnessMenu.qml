@@ -34,7 +34,7 @@ Scope {
     }
 
     function setBrightness(pct) {
-        const clamped = Math.max(5, Math.min(100, Math.round(pct)))
+        const clamped = Math.max(1, Math.min(100, Math.round(pct)))
         root.brightPct = clamped
         actionProc.command = ["brightnessctl", "-q", "set", clamped + "%"]
         actionProc.running = true
