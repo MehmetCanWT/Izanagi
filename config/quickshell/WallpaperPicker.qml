@@ -178,14 +178,14 @@ Scope {
                 }
                 spacing: 10
 
-                // Tear-free infinite GPU-scaled carousel (fixed size + fixed sourceSize)
+                // Tear-free infinite GPU-scaled carousel (fits cleanly inside container without clipping edges)
                 PathView {
                     id: carousel
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
                     model: root.filteredWallpapers
-                    pathItemCount: Math.min(7, Math.max(1, root.filteredWallpapers.length))
+                    pathItemCount: Math.min(5, Math.max(1, root.filteredWallpapers.length))
                     preferredHighlightBegin: 0.5
                     preferredHighlightEnd: 0.5
                     highlightRangeMode: PathView.StrictlyEnforceRange
@@ -194,10 +194,10 @@ Scope {
                     cacheItemCount: 4
 
                     path: Path {
-                        startX: -40
+                        startX: 160
                         startY: carousel.height / 2
                         PathAttribute { name: "cardScale"; value: 0.62 }
-                        PathAttribute { name: "cardOpacity"; value: 0.55 }
+                        PathAttribute { name: "cardOpacity"; value: 0.65 }
                         PathAttribute { name: "cardZ"; value: 1 }
 
                         PathLine {
@@ -209,11 +209,11 @@ Scope {
                         PathAttribute { name: "cardZ"; value: 20 }
 
                         PathLine {
-                            x: carousel.width + 40
+                            x: carousel.width - 160
                             y: carousel.height / 2
                         }
                         PathAttribute { name: "cardScale"; value: 0.62 }
-                        PathAttribute { name: "cardOpacity"; value: 0.55 }
+                        PathAttribute { name: "cardOpacity"; value: 0.65 }
                         PathAttribute { name: "cardZ"; value: 1 }
                     }
 
@@ -222,8 +222,8 @@ Scope {
                         required property int index
                         readonly property bool isCurrent: PathView.isCurrentItem
 
-                        width: 520
-                        height: 310
+                        width: 480
+                        height: 290
                         scale: PathView.cardScale ?? 1.0
                         opacity: PathView.cardOpacity ?? 1.0
                         z: PathView.cardZ ?? 1
