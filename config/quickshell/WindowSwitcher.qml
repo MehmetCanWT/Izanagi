@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -46,6 +47,14 @@ Scope {
         root.windows = list
     }
 
+    function iconFor(toplevel) {
+        const cls = (toplevel.lastIpcObject && toplevel.lastIpcObject.class) ? toplevel.lastIpcObject.class : ""
+        if (!cls) return ""
+        const entry = DesktopEntries.heuristicLookup(cls)
+        if (entry && entry.icon) return Quickshell.iconPath(entry.icon, true)
+        return Quickshell.iconPath(cls.toLowerCase(), true)
+    }
+
     function focusCurrent() {
         if (root.windows.length > 0 && root.currentIndex >= 0 && root.currentIndex < root.windows.length) {
             const win = root.windows[root.currentIndex]
@@ -66,7 +75,7 @@ Scope {
             left: true
             right: true
         }
-        color: "#55000000"
+        color: "#66000000"
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -75,11 +84,14 @@ Scope {
             onClicked: root.open = false
         }
 
+        readonly property int cols: Math.max(1, Math.min(4, root.windows.length))
+        readonly property int rows: Math.max(1, Math.min(3, Math.ceil(root.windows.length / cols)))
+
         Rectangle {
             anchors.centerIn: parent
-            width: Math.min(parent.width - 48, 540)
-            height: Math.min(440, list.contentHeight + 28)
-            radius: 16
+            width: cols * 276 + 24
+            height: rows * 204 + 24
+            radius: 18
             color: Theme.bg
             border.width: 1
             border.color: Theme.border
@@ -94,11 +106,11 @@ Scope {
                 if (event.key === Qt.Key_Escape) {
                     root.open = false
                     event.accepted = true
-                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
                     if (root.windows.length > 0)
                         root.currentIndex = (root.currentIndex + 1) % root.windows.length
                     event.accepted = true
-                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
+                } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
                     if (root.windows.length > 0)
                         root.currentIndex = (root.currentIndex - 1 + root.windows.length) % root.windows.length
                     event.accepted = true
@@ -108,76 +120,130 @@ Scope {
                 }
             }
 
-            ListView {
-                id: list
+            GridView {
+                id: grid
                 anchors {
                     fill: parent
-                    margins: 14
+                    margins: 12
                 }
                 clip: true
-                spacing: 6
+                cellWidth: 276
+                cellHeight: 204
                 model: root.windows
                 currentIndex: root.currentIndex
                 boundsBehavior: Flickable.StopAtBounds
 
-                delegate: Rectangle {
+                delegate: Item {
                     required property var modelData
                     required property int index
                     readonly property bool isCurrent: index === root.currentIndex
 
-                    width: list.width
-                    height: 44
-                    radius: 10
-                    color: isCurrent ? Theme.primaryContainer : Theme.surfaceContainer
-                    border.width: isCurrent ? 1 : 0
-                    border.color: Theme.accent
+                    width: grid.cellWidth
+                    height: grid.cellHeight
 
-                    RowLayout {
+                    Rectangle {
                         anchors {
                             fill: parent
-                            leftMargin: 12
-                            rightMargin: 12
+                            margins: 6
                         }
-                        spacing: 10
+                        radius: 12
+                        color: isCurrent ? Theme.primaryContainer : Theme.surfaceContainer
+                        border.width: isCurrent ? 2 : 1
+                        border.color: isCurrent ? Theme.accent : "#22ffffff"
 
-                        Rectangle {
-                            width: 24
-                            height: 24
-                            radius: 6
-                            color: isCurrent ? Theme.accent : Theme.surfaceContainerHigh
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData.workspace ? modelData.workspace.id : "•"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: isCurrent ? Theme.onPrimary : "#ffffff"
+                        ColumnLayout {
+                            anchors {
+                                fill: parent
+                                margins: 8
+                            }
+                            spacing: 6
+
+                            // Card Header (Icon + Title + Workspace)
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                Image {
+                                    Layout.preferredWidth: 16
+                                    Layout.preferredHeight: 16
+                                    source: root.iconFor(modelData)
+                                    sourceSize: Qt.size(16, 16)
+                                    smooth: true
+                                    visible: status === Image.Ready
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: modelData.title || ""
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.bold: isCurrent
+                                    color: "#ffffff"
+                                    elide: Text.ElideRight
+                                }
+
+                                Rectangle {
+                                    width: 18
+                                    height: 18
+                                    radius: 5
+                                    color: isCurrent ? Theme.accent : Theme.surfaceContainerHigh
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData.workspace ? modelData.workspace.id : "•"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                        color: isCurrent ? Theme.onPrimary : "#ffffff"
+                                    }
+                                }
+                            }
+
+                            // Live Window Preview via ScreencopyView
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 8
+                                    color: "#11111b"
+                                }
+
+                                Item {
+                                    id: previewWrap
+                                    anchors.fill: parent
+
+                                    ScreencopyView {
+                                        anchors.centerIn: parent
+                                        captureSource: modelData.wayland
+                                        live: root.open
+                                        constraintSize: Qt.size(previewWrap.width, previewWrap.height)
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: previewMask
+                                    anchors.fill: parent
+                                    radius: 8
+                                    visible: false
+                                    layer.enabled: true
+                                }
+
+                                MultiEffect {
+                                    anchors.fill: parent
+                                    source: previewWrap
+                                    maskEnabled: true
+                                    maskSource: previewMask
+                                }
                             }
                         }
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: modelData.title || ""
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.bold: isCurrent
-                            color: "#ffffff"
-                            elide: Text.ElideRight
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: root.currentIndex = index
+                            onClicked: root.focusCurrent()
                         }
-
-                        Text {
-                            text: (modelData.lastIpcObject && modelData.lastIpcObject.class) ? modelData.lastIpcObject.class : ""
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            color: Theme.textDim
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: root.currentIndex = index
-                        onClicked: root.focusCurrent()
                     }
                 }
             }
