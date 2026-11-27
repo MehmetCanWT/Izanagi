@@ -174,11 +174,11 @@ Scope {
                                 if (event.key === Qt.Key_Escape) {
                                     root.open = false
                                     event.accepted = true
-                                } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier)) || event.key === Qt.Key_Tab) {
+                                } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier)) || (event.key === Qt.Key_S && (event.modifiers & Qt.AltModifier)) || event.key === Qt.Key_Tab) {
                                     if (filteredModel.values.length > 0)
                                         appList.currentIndex = (appList.currentIndex + 1) % filteredModel.values.length
                                     event.accepted = true
-                                } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) || event.key === Qt.Key_Backtab) {
+                                } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) || (event.key === Qt.Key_W && (event.modifiers & Qt.AltModifier)) || event.key === Qt.Key_Backtab) {
                                     if (filteredModel.values.length > 0)
                                         appList.currentIndex = (appList.currentIndex - 1 + filteredModel.values.length) % filteredModel.values.length
                                     event.accepted = true

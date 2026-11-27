@@ -208,11 +208,11 @@ Scope {
                                     if (event.key === Qt.Key_Escape) {
                                         root.open = false
                                         event.accepted = true
-                                    } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                                    } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_S && (event.modifiers & Qt.AltModifier)) || event.key === Qt.Key_Tab) {
                                         if (root.filteredItems.length > 0)
                                             clipList.currentIndex = (clipList.currentIndex + 1) % root.filteredItems.length
                                         event.accepted = true
-                                    } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
+                                    } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_W && (event.modifiers & Qt.AltModifier)) || event.key === Qt.Key_Backtab) {
                                         if (root.filteredItems.length > 0)
                                             clipList.currentIndex = (clipList.currentIndex - 1 + root.filteredItems.length) % root.filteredItems.length
                                         event.accepted = true

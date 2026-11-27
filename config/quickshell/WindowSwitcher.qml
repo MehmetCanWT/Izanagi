@@ -112,11 +112,11 @@ Scope {
                 if (event.key === Qt.Key_Escape) {
                     root.open = false
                     event.accepted = true
-                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || event.key === Qt.Key_Tab || event.key === Qt.Key_D || event.key === Qt.Key_S) {
                     if (root.windows.length > 0)
                         root.currentIndex = (root.currentIndex + 1) % root.windows.length
                     event.accepted = true
-                } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
+                } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up || event.key === Qt.Key_Backtab || event.key === Qt.Key_A || event.key === Qt.Key_W) {
                     if (root.windows.length > 0)
                         root.currentIndex = (root.currentIndex - 1 + root.windows.length) % root.windows.length
                     event.accepted = true
