@@ -57,6 +57,14 @@ hl.window_rule({
     center = true,
 })
 
+hl.window_rule({
+    name   = "float-swayimg",
+    match  = { class = "^(swayimg|swayimg_.*)$" },
+    float  = true,
+    size   = "1200 760",
+    center = true,
+})
+
 -- Steam / Proton / Linux Games: tearing + no blur/shadow/anim for low latency
 hl.window_rule({
     name      = "games-low-latency",
