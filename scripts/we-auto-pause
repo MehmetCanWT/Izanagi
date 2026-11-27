@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Pause linux-wallpaperengine (SIGSTOP) when any window is on the active workspace, resume (SIGCONT) on empty desktop."""
+import json
+import os
+import signal
+import socket
+import subprocess
+import time
+
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+SIG = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+SOCK_PATH = os.path.join(RUNTIME, "hypr", SIG, ".socket2.sock")
+WATCH_EVENTS = ("workspace>>", "workspacev2>>", "openwindow>>", "closewindow>>", "movewindow>>", "movewindowv2>>", "fullscreen>>")
+
+
+def get_we_pids():
+    try:
+        out = subprocess.check_output(["pgrep", "-f", r"(^|/)linux-wallpaperengine( |$)"], text=True)
+        return [int(p) for p in out.split() if p.strip().isdigit()]
+    except subprocess.CalledProcessError:
+        return []
+
+
+def active_has_windows():
+    try:
+        ws = json.loads(subprocess.check_output(["hyprctl", "activeworkspace", "-j"], text=True))
+        ws_id = ws.get("id")
+        if ws_id is None:
+            return False
+        if ws.get("hasfullscreen"):
+            return True
+        clients = json.loads(subprocess.check_output(["hyprctl", "clients", "-j"], text=True))
+        for c in clients:
+            if c.get("mapped") and c.get("workspace", {}).get("id") == ws_id:
+                cls = (c.get("class") or "").lower()
+                if "wallpaperengine" not in cls:
+                    return True
+        return False
+    except Exception:
+        return False
+
+
+def sync_state(paused_state):
+    pids = get_we_pids()
+    if not pids:
+        return paused_state
+    should_pause = active_has_windows()
+    if should_pause != paused_state:
+        sig = signal.SIGSTOP if should_pause else signal.SIGCONT
+        for pid in pids:
+            try:
+                os.kill(pid, sig)
+            except ProcessLookupError:
+                pass
+    return should_pause
+
+
+def main():
+    if not SIG or not os.path.exists(SOCK_PATH):
+        return
+    # Let linux-wallpaperengine render its initial frames first
+    time.sleep(1.5)
+    paused = sync_state(None)
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(SOCK_PATH)
+    buf = ""
+    while True:
+        chunk = sock.recv(4096)
+        if not chunk:
+            break
+        buf += chunk.decode("utf-8", errors="ignore")
+        while "\n" in buf:
+            line, buf = buf.split("\n", 1)
+            if line.startswith(WATCH_EVENTS):
+                paused = sync_state(paused)
+
+
+if __name__ == "__main__":
+    main()

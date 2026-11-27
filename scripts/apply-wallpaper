@@ -41,6 +41,8 @@ if [[ "$WP" == we:* ]]; then
     [ -d "$WE_DIR/$WE_ID" ] || { echo "Wallpaper Engine item not found: $WE_ID" >&2; exit 1; }
 
     printf '%s\n' "$WP" > "$STATE_FILE"
+    pkill -f '(^|/)we-auto-pause( |$)' 2>/dev/null || true
+    pkill -CONT -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
     pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
     sleep 0.1
     pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
@@ -53,6 +55,9 @@ if [[ "$WP" == we:* ]]; then
             args+=(--screen-root "$mon" --bg "$WE_ID")
         done
         setsid -f linux-wallpaperengine "${args[@]}" >/dev/null 2>&1
+        if [ -x "$HOME/.local/bin/we-auto-pause" ]; then
+            setsid -f "$HOME/.local/bin/we-auto-pause" >/dev/null 2>&1
+        fi
     else
         echo "linux-wallpaperengine not installed. Run: yay -S linux-wallpaperengine-v3-bin" >&2
     fi
@@ -70,6 +75,8 @@ fi
 
 [ -f "$WP" ] || { echo "File not found: $WP" >&2; exit 1; }
 printf '%s\n' "$WP" > "$STATE_FILE"
+pkill -f '(^|/)we-auto-pause( |$)' 2>/dev/null || true
+pkill -CONT -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
 pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
 sleep 0.1
 pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true

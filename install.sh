@@ -38,7 +38,7 @@ if [ -d "$SCRIPT_DIR/assets/fonts" ]; then
 fi
 
 # Install helper scripts
-for script in game-run apply-wallpaper; do
+for script in game-run apply-wallpaper we-auto-pause; do
     if [ -f "$SCRIPT_DIR/scripts/$script" ]; then
         install -Dm755 "$SCRIPT_DIR/scripts/$script" "$HOME/.local/bin/$script"
     fi
