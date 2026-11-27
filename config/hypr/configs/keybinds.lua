@@ -17,9 +17,13 @@ hl.bind(mainMod .. " + V",      hl.dsp.exec_cmd("qs ipc call clipboard toggle"))
 hl.bind(mainMod .. " + K",      hl.dsp.exec_cmd("qs ipc call keybinds toggle"))
 hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("qs ipc call lock lock"))
 
--- Window Switcher (ALT + Tab)
+-- Window Switcher (ALT + Tab) & Hyprspace Overview (SUPER + Tab)
 hl.bind("ALT + Tab",            hl.dsp.exec_cmd("qs ipc call switcher next"))
 hl.bind("ALT + SHIFT + Tab",    hl.dsp.exec_cmd("qs ipc call switcher prev"))
+if hl.plugin.overview ~= nil then
+    hl.bind(mainMod .. " + Tab",         function() hl.plugin.overview.toggle() end)
+    hl.bind(mainMod .. " + SHIFT + Tab", function() hl.plugin.overview.toggle("all") end)
+end
 
 -- Window Management
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("~/.config/hypr/scripts/smart-close.sh"))

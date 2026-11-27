@@ -63,11 +63,30 @@ link_config "$SCRIPT_DIR/config/hypr"       "$HOME/.config/hypr"
 link_config "$SCRIPT_DIR/config/matugen"    "$HOME/.config/matugen"
 link_config "$SCRIPT_DIR/config/quickshell" "$HOME/.config/quickshell"
 link_config "$SCRIPT_DIR/config/rustfetch"  "$HOME/.config/rustfetch"
+link_config "$SCRIPT_DIR/config/swayimg"    "$HOME/.config/swayimg"
 mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 link_config "$SCRIPT_DIR/config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
 link_config "$SCRIPT_DIR/config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
 
 # Ensure fallback hyprlock-colors.conf exists before first matugen run
 touch "$SCRIPT_DIR/config/hypr/configs/hyprlock-colors.conf"
+
+# Install & enable Hyprland plugins via hyprpm
+if command -v hyprpm >/dev/null 2>&1; then
+    echo "==> Installing Hyprland plugins via hyprpm..."
+    hyprpm update || true
+    for spec in \
+        "https://github.com/gfhdhytghd/hypr-edgehover|hypr-edgehover" \
+        "https://github.com/gfhdhytghd/HyprCapture|hyprcapture" \
+        "https://github.com/mennemann/hyprland-confined-floats|confined-floats" \
+        "https://github.com/KZDKM/Hyprspace|Hyprspace"
+    do
+        repo="${spec%%|*}"
+        plugin="${spec##*|}"
+        yes | hyprpm add "$repo" || true
+        hyprpm enable "$plugin" || true
+    done
+    hyprpm reload -n || true
+fi
 
 echo "==> Izanagi installation complete!"

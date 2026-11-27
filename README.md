@@ -14,7 +14,8 @@ Izanagi/
 │   ├── hypr/               # Hyprland Lua config, hyprpaper & scripts
 │   ├── matugen/            # Material You 3 config & templates (`scheme-fidelity`)
 │   ├── quickshell/         # Custom QML shell (Bar, Launcher, WallpaperPicker, Menus, Widgets, LockScreen)
-│   └── rustfetch/          # System fetch config & logos
+│   ├── rustfetch/          # System fetch config & logos
+│   └── swayimg/            # Lightweight Wayland image viewer config (60% WASD)
 ├── scripts/
 │   ├── apply-wallpaper     # Hyprpaper + vibrant Matugen theme applier
 │   └── game-run            # NVIDIA PRIME + Vulkan offload launcher
@@ -50,6 +51,7 @@ cd ~/Code/Izanagi && ./install.sh
 - `SUPER + V` — Quickshell Clipboard History
 - `SUPER + K` — Quickshell Keybinds Menu
 - `ALT + Tab` / `ALT + SHIFT + Tab` — Live Window Switcher
+- `SUPER + Tab` / `SUPER + SHIFT + Tab` — Hyprspace Workspace Overview
 - `SUPER + Return` — Ghostty Terminal
 - `SUPER + E` — Luciole File Manager
 - `SUPER + B` — Zen Browser
@@ -58,3 +60,11 @@ cd ~/Code/Izanagi && ./install.sh
 - `SUPER + C` — Toggle Floating
 - `SUPER + F` — Toggle Fullscreen
 - `Print` / `Shift + Print` — Region / Fullscreen Screenshot
+
+## Hyprland Plugins (`hyprpm`)
+
+Installed automatically by `install.sh`:
+- **Hyprspace** (`KZDKM/Hyprspace`) — Workspace overview (`SUPER + Tab`)
+- **hypr-edgehover** (`gfhdhytghd/hypr-edgehover`) — Edge hover passthrough
+- **HyprCapture** (`gfhdhytghd/HyprCapture`) — Screenshot editor & screen recording (`Print`, `ALT + Print`)
+- **confined-floats** (`mennemann/hyprland-confined-floats`) — Confine floating windows inside workarea

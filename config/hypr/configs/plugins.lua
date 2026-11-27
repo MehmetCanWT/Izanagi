@@ -42,3 +42,29 @@ if hl.plugin.hyprcapture ~= nil then
         },
     })
 end
+
+if hl.plugin.overview ~= nil then
+    hl.config({
+        plugin = {
+            overview = {
+                panelColor                  = "rgba(17, 17, 27, 0.92)",
+                panelBorderColor            = "rgba(203, 166, 247, 0.35)",
+                panelBorderWidth            = 1,
+                panelHeight                 = 260,
+                reservedArea                = 38,
+                workspaceActiveBackground   = "rgba(49, 50, 68, 0.85)",
+                workspaceInactiveBackground = "rgba(24, 24, 37, 0.70)",
+                workspaceActiveBorder       = "rgb(203, 166, 247)",
+                workspaceInactiveBorder     = "rgba(255, 255, 255, 0.12)",
+                workspaceBorderSize         = 2,
+                onBottom                    = false,
+                centerAligned               = true,
+                autoDrag                    = true,
+                exitOnClick                 = true,
+                exitOnSwitch                = true,
+                showNewWorkspace            = true,
+                showEmptyWorkspace          = false,
+            },
+        },
+    })
+end
