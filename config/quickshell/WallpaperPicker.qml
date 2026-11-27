@@ -266,6 +266,7 @@ Scope {
                         required property var modelData
                         required property int index
                         readonly property bool isCurrent: PathView.isCurrentItem
+                        readonly property bool isGif: modelData && modelData.preview ? modelData.preview.toLowerCase().endsWith(".gif") : false
 
                         width: 600
                         height: 360
@@ -273,15 +274,52 @@ Scope {
                         opacity: PathView.cardOpacity ?? 1.0
                         z: PathView.cardZ ?? 1
 
-                        Image {
-                            id: wpImg
+                        Item {
+                            id: wpVisual
                             anchors.fill: parent
-                            source: root.open ? ("file://" + modelData.preview) : ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: false
                             visible: false
-                            sourceSize: Qt.size(1080, 648)
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#111118"
+                            }
+
+                            // Dimmed fill backdrop for square WE previews
+                            Image {
+                                visible: modelData.isWe
+                                anchors.fill: parent
+                                source: (root.open && modelData.isWe) ? ("file://" + modelData.preview) : ""
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: false
+                                smooth: true
+                                opacity: 0.25
+                                sourceSize: Qt.size(256, 256)
+                            }
+
+                            // Static image (non-GIF)
+                            Image {
+                                visible: !isGif
+                                anchors.fill: parent
+                                source: (root.open && !isGif) ? ("file://" + modelData.preview) : ""
+                                fillMode: modelData.isWe ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: false
+                                smooth: true
+                                sourceSize: modelData.isWe ? undefined : Qt.size(1080, 648)
+                            }
+
+                            // Animated GIF preview (plays when focused)
+                            AnimatedImage {
+                                visible: isGif
+                                anchors.fill: parent
+                                source: (root.open && isGif) ? ("file://" + modelData.preview) : ""
+                                fillMode: modelData.isWe ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: false
+                                smooth: true
+                                playing: root.open && isCurrent
+                            }
                         }
 
                         Rectangle {
@@ -294,7 +332,7 @@ Scope {
 
                         MultiEffect {
                             anchors.fill: parent
-                            source: wpImg
+                            source: wpVisual
                             maskEnabled: true
                             maskSource: wpMask
                         }
@@ -329,6 +367,35 @@ Scope {
                                 font.pixelSize: 11
                                 font.bold: true
                                 color: Theme.accent
+                            }
+                        }
+
+                        Rectangle {
+                            visible: modelData.isWe && isCurrent && modelData.title.length > 0
+                            anchors {
+                                bottom: parent.bottom
+                                horizontalCenter: parent.horizontalCenter
+                                bottomMargin: 10
+                            }
+                            width: Math.min(parent.width - 24, weTitle.implicitWidth + 16)
+                            height: 24
+                            radius: 6
+                            color: "#cc101015"
+
+                            Text {
+                                id: weTitle
+                                anchors {
+                                    fill: parent
+                                    leftMargin: 8
+                                    rightMargin: 8
+                                }
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                text: modelData.title
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                color: "#ffffff"
+                                elide: Text.ElideRight
                             }
                         }
 
