@@ -15,7 +15,7 @@ if [ "${#current_wins[@]}" -gt 0 ]; then
     printf '%s\n' "${current_wins[@]}" > "$state_file"
     batch=""
     for addr in "${current_wins[@]}"; do
-        batch+="dispatch hl.dsp.window.move({ workspace = \"$special_ws\", silent = true, window = \"address:$addr\" }); "
+        batch+="dispatch hl.dsp.exec_raw(\"movetoworkspacesilent $special_ws,address:$addr\"); "
     done
     hyprctl --batch "$batch" >/dev/null
 elif [ -f "$state_file" ]; then
@@ -25,7 +25,7 @@ elif [ -f "$state_file" ]; then
         batch=""
         for addr in "${saved_wins[@]}"; do
             [ -n "$addr" ] || continue
-            batch+="dispatch hl.dsp.window.move({ workspace = $ws, silent = true, window = \"address:$addr\" }); "
+            batch+="dispatch hl.dsp.exec_raw(\"movetoworkspacesilent $ws,address:$addr\"); "
         done
         [ -n "$batch" ] && hyprctl --batch "$batch" >/dev/null
     fi
