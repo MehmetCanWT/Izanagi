@@ -4,15 +4,33 @@ set -euo pipefail
 ws=$(hyprctl activeworkspace -j | jq -r '.id')
 [ -n "$ws" ] && [ "$ws" != "null" ] || exit 0
 
-state_file="${XDG_RUNTIME_DIR:-/tmp}/hypr_show_desktop_${ws}"
 special_ws="special:desktop_${ws}"
+clients_json=$(hyprctl clients -j)
 
+# If any windows are currently hidden in special:desktop_<ws>, always restore all of them
+mapfile -t hidden_wins < <(
+    printf '%s' "$clients_json" | jq -r --arg sp "$special_ws" '.[] | select(.workspace.name == $sp) | .address'
+)
+
+if [ "${#hidden_wins[@]}" -gt 0 ]; then
+    cmds=()
+    for addr in "${hidden_wins[@]}"; do
+        [ -n "$addr" ] || continue
+        cmds+=("dispatch hl.dsp.window.move({ workspace = $ws, silent = true, window = \"address:$addr\" })")
+    done
+    if [ "${#cmds[@]}" -gt 0 ]; then
+        batch=$(IFS=';'; echo "${cmds[*]}")
+        hyprctl --batch "$batch" >/dev/null
+    fi
+    exit 0
+fi
+
+# Otherwise hide all mapped windows on the active workspace
 mapfile -t current_wins < <(
-    hyprctl clients -j | jq -r --argjson ws "$ws" '.[] | select(.workspace.id == $ws and .mapped == true and ((.class // "") | test("wallpaperengine"; "i") | not)) | .address'
+    printf '%s' "$clients_json" | jq -r --argjson ws "$ws" '.[] | select(.workspace.id == $ws and .mapped == true and ((.class // "") | test("wallpaperengine"; "i") | not)) | .address'
 )
 
 if [ "${#current_wins[@]}" -gt 0 ]; then
-    printf '%s\n' "${current_wins[@]}" > "$state_file"
     cmds=()
     for addr in "${current_wins[@]}"; do
         cmds+=("dispatch hl.dsp.window.move({ workspace = \"$special_ws\", silent = true, window = \"address:$addr\" })")
@@ -24,19 +42,5 @@ if [ "${#current_wins[@]}" -gt 0 ]; then
     open_sp=$(hyprctl monitors -j | jq -r '.[0].specialWorkspace.name // ""')
     if [ "$open_sp" = "$special_ws" ]; then
         hyprctl dispatch "hl.dsp.workspace.toggle_special(\"desktop_${ws}\")" >/dev/null
-    fi
-elif [ -f "$state_file" ]; then
-    mapfile -t saved_wins < "$state_file"
-    rm -f "$state_file"
-    if [ "${#saved_wins[@]}" -gt 0 ]; then
-        cmds=()
-        for addr in "${saved_wins[@]}"; do
-            [ -n "$addr" ] || continue
-            cmds+=("dispatch hl.dsp.window.move({ workspace = $ws, silent = true, window = \"address:$addr\" })")
-        done
-        if [ "${#cmds[@]}" -gt 0 ]; then
-            batch=$(IFS=';'; echo "${cmds[*]}")
-            hyprctl --batch "$batch" >/dev/null
-        fi
     fi
 fi
