@@ -8,6 +8,20 @@ Scope {
     id: root
     property bool open: false
     property string query: ""
+    readonly property bool isCalcMode: query.trim().startsWith("=")
+    readonly property string calcResult: {
+        if (!isCalcMode) return ""
+        const expr = query.trim().slice(1).trim()
+        if (!expr || !/^[0-9+\-*/().%\s^eE]+$/.test(expr)) return ""
+        try {
+            const safe = expr.replace(/\^/g, "**")
+            const val = Function('"use strict"; return (' + safe + ')')()
+            if (typeof val === "number" && Number.isFinite(val)) {
+                return String(Math.round(val * 1e10) / 1e10)
+            }
+        } catch (e) {}
+        return ""
+    }
 
     onOpenChanged: {
         if (!open) {
@@ -39,6 +53,13 @@ Scope {
     }
 
     function launchSelected() {
+        if (root.isCalcMode) {
+            if (root.calcResult.length > 0) {
+                Quickshell.execDetached(["wl-copy", root.calcResult])
+                root.open = false
+            }
+            return
+        }
         const vals = filteredModel.values
         if (vals.length > 0 && appList.currentIndex >= 0 && appList.currentIndex < vals.length) {
             vals[appList.currentIndex].execute()
@@ -49,7 +70,7 @@ Scope {
     ScriptModel {
         id: filteredModel
         values: {
-            if (!root.open) return []
+            if (!root.open || root.isCalcMode) return []
             const q = root.query.trim().toLowerCase()
             const apps = [...DesktopEntries.applications.values]
             apps.sort((a, b) => a.name.localeCompare(b.name))
@@ -180,8 +201,51 @@ Scope {
                     }
                 }
 
+                // Calculator result card (=expr)
+                Rectangle {
+                    visible: root.isCalcMode
+                    Layout.fillWidth: true
+                    height: 82
+                    radius: 12
+                    color: Theme.primaryContainer
+                    border.width: 1
+                    border.color: Theme.accent
+
+                    ColumnLayout {
+                        anchors {
+                            fill: parent
+                            margins: 14
+                        }
+                        spacing: 4
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.calcResult.length > 0 ? ("= " + root.calcResult) : "Type math expression (e.g. =250*1.18)"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: root.calcResult.length > 0 ? 22 : 14
+                            font.bold: root.calcResult.length > 0
+                            color: root.calcResult.length > 0 ? "#ffffff" : Theme.textDim
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            visible: root.calcResult.length > 0
+                            text: "Press Enter or click to copy result"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            color: Theme.accent
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: root.launchSelected()
+                    }
+                }
+
                 // Applications list
                 ListView {
+                    visible: !root.isCalcMode
                     id: appList
                     Layout.fillWidth: true
                     Layout.fillHeight: true

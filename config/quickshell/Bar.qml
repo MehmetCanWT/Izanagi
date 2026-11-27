@@ -22,6 +22,27 @@ PanelWindow {
     property int brightPct: 100
     property int batPct: -1
     property bool batCharging: false
+    property bool dndOn: false
+    property int notifCount: 0
+
+    function workspaceIcons(wsId) {
+        const seen = {}
+        const icons = []
+        const list = [...Hyprland.toplevels.values]
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i]
+            if (!t || !t.workspace || t.workspace.id !== wsId) continue
+            const cls = (t.lastIpcObject && t.lastIpcObject.class) ? String(t.lastIpcObject.class) : ""
+            if (!cls || seen[cls]) continue
+            seen[cls] = true
+            const entry = DesktopEntries.heuristicLookup(cls)
+            const iconName = (entry && entry.icon) ? entry.icon : cls.toLowerCase()
+            const path = Quickshell.iconPath(iconName, true)
+            if (path) icons.push(path)
+            if (icons.length >= 4) break
+        }
+        return icons
+    }
 
     function refreshStats() {
         statsProc.running = true
@@ -134,19 +155,39 @@ PanelWindow {
                     delegate: Rectangle {
                         required property var modelData
                         readonly property bool isActive: Hyprland.focusedWorkspace?.id === modelData.id
+                        readonly property var wsIcons: bar.workspaceIcons(modelData.id)
                         visible: modelData.id > 0
-                        width: 26
+                        width: Math.max(26, wsRow.implicitWidth + 12)
                         height: 22
                         radius: 6
                         color: isActive ? Theme.accent : Theme.surfaceAlt
 
-                        Text {
+                        Row {
+                            id: wsRow
                             anchors.centerIn: parent
-                            text: modelData.id
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 12
-                            font.bold: isActive
-                            color: isActive ? Theme.onPrimary : "#ffffff"
+                            spacing: 4
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.id
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                                font.bold: isActive
+                                color: isActive ? Theme.onPrimary : "#ffffff"
+                            }
+
+                            Repeater {
+                                model: wsIcons
+                                delegate: Image {
+                                    required property string modelData
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 13
+                                    height: 13
+                                    source: modelData
+                                    sourceSize: Qt.size(13, 13)
+                                    smooth: true
+                                }
+                            }
                         }
 
                         MouseArea {
@@ -341,7 +382,36 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar power; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call battery toggle"])
+                    onClicked: Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar power notifications; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call battery toggle"])
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: notifLabel.implicitWidth + 14
+                Layout.preferredHeight: 22
+                radius: 6
+                color: bar.dndOn ? Theme.primaryContainer : Theme.surfaceAlt
+                clip: true
+
+                Text {
+                    id: notifLabel
+                    anchors.centerIn: parent
+                    text: (bar.dndOn ? "󰂛" : "󰂚") + (bar.notifCount > 0 ? (" " + bar.notifCount) : "")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    color: bar.dndOn ? Theme.accent : "#ffffff"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton) {
+                            Quickshell.execDetached(["qs", "ipc", "call", "notifications", "toggleDnd"])
+                        } else {
+                            Quickshell.execDetached(["sh", "-c", "for t in wifi bluetooth audio brightness calendar battery power; do qs ipc call $t closeIfOpen >/dev/null 2>&1; done; qs ipc call notifications toggle"])
+                        }
+                    }
                 }
             }
 

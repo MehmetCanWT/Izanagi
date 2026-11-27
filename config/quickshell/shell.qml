@@ -2,9 +2,13 @@
 import Quickshell
 
 ShellRoot {
-    Bar { id: bar }
+    Bar {
+        id: bar
+        dndOn: notif.dnd
+        notifCount: notif.history.length
+    }
     WallpaperPicker {}
-    Notifications {}
+    Notifications { id: notif }
     Launcher {}
     WifiMenu { onChanged: bar.refreshStats() }
     BluetoothMenu { onChanged: bar.refreshStats() }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-for target in launcher wallpaper clipboard keybinds switcher power wifi bluetooth audio brightness calendar battery; do
+for target in launcher wallpaper clipboard keybinds switcher power wifi bluetooth audio brightness calendar battery notifications; do
     if [ "$(qs ipc call "$target" closeIfOpen 2>/dev/null || true)" = "true" ]; then
         exit 0
     fi

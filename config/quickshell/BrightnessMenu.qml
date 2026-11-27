@@ -8,6 +8,9 @@ Scope {
     id: root
     property bool open: false
     property int brightPct: 100
+    property bool nightLightOn: false
+    property int nightTemp: 4000
+    property bool hasHyprsunset: false
     signal changed()
 
     IpcHandler {
@@ -40,13 +43,28 @@ Scope {
         actionProc.running = true
     }
 
+    function setNightLight(enable, temp) {
+        const t = temp || root.nightTemp
+        root.nightTemp = t
+        if (enable) {
+            root.nightLightOn = true
+            Quickshell.execDetached(["sh", "-c", "pkill -x hyprsunset 2>/dev/null || true; hyprsunset -t " + t + " >/dev/null 2>&1 &"])
+        } else {
+            root.nightLightOn = false
+            Quickshell.execDetached(["pkill", "-x", "hyprsunset"])
+        }
+    }
+
     Process {
         id: infoProc
-        command: ["sh", "-c", "brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d '%'"]
+        command: ["sh", "-c", "br=$(brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d '%'); nl=$(pgrep -x hyprsunset >/dev/null && echo 1 || echo 0); hs=$(command -v hyprsunset >/dev/null && echo 1 || echo 0); printf '%s\\n%s\\n%s\\n' \"$br\" \"$nl\" \"$hs\""]
         stdout: StdioCollector {
             onStreamFinished: {
-                const b = parseInt(this.text.trim(), 10)
+                const lines = this.text.split("\n")
+                const b = parseInt((lines[0] || "").trim(), 10)
                 if (!isNaN(b)) root.brightPct = b
+                root.nightLightOn = (lines[1] || "").trim() === "1"
+                root.hasHyprsunset = (lines[2] || "").trim() === "1"
             }
         }
     }
@@ -178,6 +196,81 @@ Scope {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: root.setBrightness(modelData)
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: Theme.border
+                }
+
+                // Night Light (hyprsunset)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.hasHyprsunset ? ("󰖔  Night Light  " + (root.nightLightOn ? (root.nightTemp + "K") : "Off")) : "󰖔  Night Light (install hyprsunset)"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        font.bold: true
+                        color: root.hasHyprsunset ? "#ffffff" : Theme.textDim
+                    }
+
+                    Rectangle {
+                        visible: root.hasHyprsunset
+                        Layout.preferredWidth: 54
+                        height: 26
+                        radius: 8
+                        color: root.nightLightOn ? Theme.accent : Theme.surfaceContainer
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.nightLightOn ? "On" : "Off"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: root.nightLightOn ? Theme.onPrimary : "#ffffff"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.setNightLight(!root.nightLightOn, root.nightTemp)
+                        }
+                    }
+                }
+
+                RowLayout {
+                    visible: root.hasHyprsunset
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Repeater {
+                        model: [3000, 4000, 5000]
+                        delegate: Rectangle {
+                            required property int modelData
+                            Layout.fillWidth: true
+                            height: 26
+                            radius: 8
+                            color: (root.nightLightOn && root.nightTemp === modelData) ? Theme.primaryContainer : Theme.surfaceContainer
+                            border.width: (root.nightLightOn && root.nightTemp === modelData) ? 1 : 0
+                            border.color: Theme.accent
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData + "K"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                                color: "#ffffff"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: root.setNightLight(true, modelData)
                             }
                         }
                     }
