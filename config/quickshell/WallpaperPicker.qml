@@ -54,17 +54,22 @@ Scope {
         if (q === "") {
             filteredWallpapers = allWallpapers
         } else {
-            filteredWallpapers = allWallpapers.filter(p => p.toLowerCase().includes(q))
+            filteredWallpapers = allWallpapers.filter(item =>
+                item.title.toLowerCase().includes(q) || item.target.toLowerCase().includes(q)
+            )
         }
         if (filteredWallpapers.length > 0) {
-            const idx = root.activeWallpaper ? filteredWallpapers.indexOf(root.activeWallpaper) : -1
+            let idx = -1
+            if (root.activeWallpaper) {
+                idx = filteredWallpapers.findIndex(item => item.target === root.activeWallpaper)
+            }
             carousel.currentIndex = idx >= 0 ? idx : 0
         }
     }
 
-    function applyWallpaper(path) {
-        if (!path) return
-        applyProc.command = [Quickshell.env("HOME") + "/.local/bin/apply-wallpaper", path]
+    function applyWallpaper(item) {
+        if (!item || !item.target) return
+        applyProc.command = [Quickshell.env("HOME") + "/.local/bin/apply-wallpaper", item.target]
         applyProc.running = true
         root.open = false
     }
@@ -87,23 +92,54 @@ Scope {
         id: scanProc
         command: [
             "sh", "-c",
-            "cur=$(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' \"$HOME/.config/hypr/hyprpaper.conf\" 2>/dev/null | head -n1); " +
-            "cur=${cur/#\\~/$HOME}; " +
+            "cur=''; " +
+            "if [ -f \"$HOME/.cache/izanagi-wallpaper\" ]; then cur=$(head -n1 \"$HOME/.cache/izanagi-wallpaper\" 2>/dev/null || true); fi; " +
+            "if [ -z \"$cur\" ]; then cur=$(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' \"$HOME/.config/hypr/hyprpaper.conf\" 2>/dev/null | head -n1); cur=${cur/#\\~/$HOME}; fi; " +
             "printf 'ACTIVE:%s\\n' \"$cur\"; " +
+            "we_dir=\"$HOME/.local/share/Steam/steamapps/workshop/content/431960\"; " +
+            "if [ -d \"$we_dir\" ]; then " +
+            "  python3 -c 'import glob,json,os; " +
+            "d=os.path.expanduser(\"~/.local/share/Steam/steamapps/workshop/content/431960\"); " +
+            "for p in sorted(glob.glob(os.path.join(d, \"*\", \"project.json\"))): " +
+            "  wid=os.path.basename(os.path.dirname(p)); " +
+            "  try: data=json.load(open(p)); title=str(data.get(\"title\", wid)).replace(\"|\",\" \"); prev=data.get(\"preview\",\"\")\n" +
+            "  except Exception: title=wid; prev=\"\"\n" +
+            "  pp=os.path.join(os.path.dirname(p), prev) if prev else \"\"; " +
+            "  if not (pp and os.path.isfile(pp)): " +
+            "    cands=glob.glob(os.path.join(os.path.dirname(p), \"preview.*\")); pp=cands[0] if cands else \"\"\n" +
+            "  if pp: print(f\"WE|{wid}|{pp}|{title}\")' 2>/dev/null || true; " +
+            "fi; " +
             "find \"$HOME/Pictures/Wallpapers\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"
         ]
         stdout: StdioCollector {
             onStreamFinished: {
                 const raw = this.text.split("\n").map(s => s.trim()).filter(s => s.length > 0)
-                const lines = []
+                const items = []
                 for (let i = 0; i < raw.length; i++) {
-                    if (raw[i].startsWith("ACTIVE:")) {
-                        root.activeWallpaper = raw[i].slice(7).trim()
+                    const line = raw[i]
+                    if (line.startsWith("ACTIVE:")) {
+                        root.activeWallpaper = line.slice(7).trim()
+                    } else if (line.startsWith("WE|")) {
+                        const parts = line.split("|")
+                        if (parts.length >= 4) {
+                            items.push({
+                                target: "we:" + parts[1],
+                                preview: parts[2],
+                                title: parts.slice(3).join("|"),
+                                isWe: true
+                            })
+                        }
                     } else {
-                        lines.push(raw[i])
+                        const name = line.split("/").pop()
+                        items.push({
+                            target: line,
+                            preview: line,
+                            title: name,
+                            isWe: false
+                        })
                     }
                 }
-                root.allWallpapers = lines
+                root.allWallpapers = items
                 root.applyFilter()
             }
         }
@@ -227,7 +263,7 @@ Scope {
                     }
 
                     delegate: Item {
-                        required property string modelData
+                        required property var modelData
                         required property int index
                         readonly property bool isCurrent: PathView.isCurrentItem
 
@@ -240,7 +276,7 @@ Scope {
                         Image {
                             id: wpImg
                             anchors.fill: parent
-                            source: root.open ? ("file://" + modelData) : ""
+                            source: root.open ? ("file://" + modelData.preview) : ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: false
@@ -269,6 +305,31 @@ Scope {
                             radius: 16
                             border.width: isCurrent ? 2 : 1
                             border.color: isCurrent ? Theme.accent : "#33ffffff"
+                        }
+
+                        Rectangle {
+                            visible: modelData.isWe
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                margins: 10
+                            }
+                            width: weText.implicitWidth + 12
+                            height: 22
+                            radius: 6
+                            color: "#cc101015"
+                            border.width: 1
+                            border.color: Theme.accent
+
+                            Text {
+                                id: weText
+                                anchors.centerIn: parent
+                                text: "󰎁 WE"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: Theme.accent
+                            }
                         }
 
                         MouseArea {

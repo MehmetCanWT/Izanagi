@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+STATE_FILE="$HOME/.cache/izanagi-wallpaper"
+WE_DIR="$HOME/.local/share/Steam/steamapps/workshop/content/431960"
+mkdir -p "$HOME/.cache"
+
 WP="${1:-}"
-[ -n "$WP" ] && [ -f "$WP" ] || { echo "Usage: $0 <wallpaper-path>" >&2; exit 1; }
-
-# 1. Persist & apply wallpaper via hyprpaper
-printf '# Hyprpaper 0.8+ Block Syntax Configuration\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$WP" > "$HOME/.config/hypr/hyprpaper.conf"
-
-if pgrep -x hyprpaper >/dev/null 2>&1; then
-    hyprctl hyprpaper wallpaper ",$WP,cover" >/dev/null 2>&1 || true
-else
-    setsid -f hyprpaper >/dev/null 2>&1
+if [ "$WP" = "--restore" ]; then
+    [ -f "$STATE_FILE" ] || exit 0
+    WP=$(cat "$STATE_FILE" 2>/dev/null || true)
+    [ -n "$WP" ] || exit 0
 fi
 
-# 2. Pick the most vibrant source color (avoid dark/blue background bias) & apply Material You 3
-if command -v matugen >/dev/null 2>&1 && [ -f "$HOME/.config/matugen/config.toml" ]; then
-    idx=$(matugen image "$WP" --show-source-colors 2>/dev/null | python3 -c '
+[ -n "$WP" ] || { echo "Usage: $0 <wallpaper-path | we:ID | --restore>" >&2; exit 1; }
+
+apply_matugen() {
+    local img="$1"
+    [ -n "$img" ] && [ -f "$img" ] || return 0
+    if command -v matugen >/dev/null 2>&1 && [ -f "$HOME/.config/matugen/config.toml" ]; then
+        local idx
+        idx=$(matugen image "$img" --show-source-colors 2>/dev/null | python3 -c '
 import sys, colorsys
 best_i, best_score = 0, -1.0
 for i, line in enumerate(sys.stdin):
@@ -28,5 +32,47 @@ for i, line in enumerate(sys.stdin):
         best_score, best_i = score, i
 print(best_i)
 ' 2>/dev/null || echo 0)
-    matugen image "$WP" -m dark -t scheme-fidelity --source-color-index "$idx" -c "$HOME/.config/matugen/config.toml" >/dev/null 2>&1 || true
+        matugen image "$img" -m dark -t scheme-fidelity --source-color-index "$idx" -c "$HOME/.config/matugen/config.toml" >/dev/null 2>&1 || true
+    fi
+}
+
+if [[ "$WP" == we:* ]]; then
+    WE_ID="${WP#we:}"
+    [ -d "$WE_DIR/$WE_ID" ] || { echo "Wallpaper Engine item not found: $WE_ID" >&2; exit 1; }
+
+    printf '%s\n' "$WP" > "$STATE_FILE"
+    pkill -x linux-wallpaperengine 2>/dev/null || true
+
+    if command -v linux-wallpaperengine >/dev/null 2>&1; then
+        mapfile -t monitors < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
+        [ "${#monitors[@]}" -gt 0 ] || monitors=("eDP-1")
+        args=(--silent --fps 60)
+        for mon in "${monitors[@]}"; do
+            args+=(--screen-root "$mon" --bg "$WE_ID")
+        done
+        setsid -f linux-wallpaperengine "${args[@]}" >/dev/null 2>&1
+    else
+        echo "linux-wallpaperengine not installed. Run: yay -S linux-wallpaperengine-v3-bin" >&2
+    fi
+
+    # Extract preview image for Material You 3 colors
+    preview=$(find "$WE_DIR/$WE_ID" -maxdepth 1 -type f \( -iname 'preview.jpg' -o -iname 'preview.png' -o -iname 'preview.jpeg' -o -iname 'preview.gif' \) | head -n1 || true)
+    apply_matugen "$preview"
+    exit 0
 fi
+
+[ -f "$WP" ] || { echo "File not found: $WP" >&2; exit 1; }
+printf '%s\n' "$WP" > "$STATE_FILE"
+pkill -x linux-wallpaperengine 2>/dev/null || true
+
+# 1. Persist & apply static wallpaper via hyprpaper
+printf '# Hyprpaper 0.8+ Block Syntax Configuration\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$WP" > "$HOME/.config/hypr/hyprpaper.conf"
+
+if pgrep -x hyprpaper >/dev/null 2>&1; then
+    hyprctl hyprpaper wallpaper ",$WP,cover" >/dev/null 2>&1 || true
+else
+    setsid -f hyprpaper >/dev/null 2>&1
+fi
+
+# 2. Apply Material You 3 colors
+apply_matugen "$WP"

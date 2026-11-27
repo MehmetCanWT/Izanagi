@@ -13,20 +13,30 @@ mapfile -t current_wins < <(
 
 if [ "${#current_wins[@]}" -gt 0 ]; then
     printf '%s\n' "${current_wins[@]}" > "$state_file"
-    batch=""
+    cmds=()
     for addr in "${current_wins[@]}"; do
-        batch+="dispatch hl.dsp.exec_raw(\"movetoworkspacesilent $special_ws,address:$addr\"); "
+        cmds+=("dispatch hl.dsp.window.move({ workspace = \"$special_ws\", silent = true, window = \"address:$addr\" })")
     done
+    batch=$(IFS=';'; echo "${cmds[*]}")
     hyprctl --batch "$batch" >/dev/null
+
+    # Ensure special workspace does not remain open as an overlay
+    open_sp=$(hyprctl monitors -j | jq -r '.[0].specialWorkspace.name // ""')
+    if [ "$open_sp" = "$special_ws" ]; then
+        hyprctl dispatch "hl.dsp.workspace.toggle_special(\"desktop_${ws}\")" >/dev/null
+    fi
 elif [ -f "$state_file" ]; then
     mapfile -t saved_wins < "$state_file"
     rm -f "$state_file"
     if [ "${#saved_wins[@]}" -gt 0 ]; then
-        batch=""
+        cmds=()
         for addr in "${saved_wins[@]}"; do
             [ -n "$addr" ] || continue
-            batch+="dispatch hl.dsp.exec_raw(\"movetoworkspacesilent $ws,address:$addr\"); "
+            cmds+=("dispatch hl.dsp.window.move({ workspace = $ws, silent = true, window = \"address:$addr\" })")
         done
-        [ -n "$batch" ] && hyprctl --batch "$batch" >/dev/null
+        if [ "${#cmds[@]}" -gt 0 ]; then
+            batch=$(IFS=';'; echo "${cmds[*]}")
+            hyprctl --batch "$batch" >/dev/null
+        fi
     fi
 fi
