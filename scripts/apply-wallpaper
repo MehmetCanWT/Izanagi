@@ -14,6 +14,16 @@ fi
 
 [ -n "$WP" ] || { echo "Usage: $0 <wallpaper-path | we:ID | --restore>" >&2; exit 1; }
 
+stop_animated() {
+    pkill -f '(^|/)we-auto-pause( |$)' 2>/dev/null || true
+    pkill -CONT -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+    pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+    pkill -x mpvpaper 2>/dev/null || true
+    sleep 0.1
+    pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+    pkill -9 -x mpvpaper 2>/dev/null || true
+}
+
 apply_matugen() {
     local img="$1"
     [ -n "$img" ] && [ -f "$img" ] || return 0
@@ -36,18 +46,28 @@ print(best_i)
     fi
 }
 
+run_mpvpaper() {
+    local video="$1"
+    setsid -f mpvpaper --auto-pause -o "loop-file=inf hwdec=auto volume=35" ALL "$video" >/dev/null 2>&1
+}
+
 if [[ "$WP" == we:* ]]; then
     WE_ID="${WP#we:}"
     [ -d "$WE_DIR/$WE_ID" ] || { echo "Wallpaper Engine item not found: $WE_ID" >&2; exit 1; }
 
     printf '%s\n' "$WP" > "$STATE_FILE"
-    pkill -f '(^|/)we-auto-pause( |$)' 2>/dev/null || true
-    pkill -CONT -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
-    pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
-    sleep 0.1
-    pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+    stop_animated
 
-    if command -v linux-wallpaperengine >/dev/null 2>&1; then
+    wtype=""
+    vfile=""
+    if [ -f "$WE_DIR/$WE_ID/project.json" ]; then
+        wtype=$(jq -r '.type // ""' "$WE_DIR/$WE_ID/project.json" 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        vfile=$(jq -r '.file // ""' "$WE_DIR/$WE_ID/project.json" 2>/dev/null || true)
+    fi
+
+    if [ "$wtype" = "video" ] && [ -n "$vfile" ] && [ -f "$WE_DIR/$WE_ID/$vfile" ] && command -v mpvpaper >/dev/null 2>&1; then
+        run_mpvpaper "$WE_DIR/$WE_ID/$vfile"
+    elif command -v linux-wallpaperengine >/dev/null 2>&1; then
         mapfile -t monitors < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
         [ "${#monitors[@]}" -gt 0 ] || monitors=("eDP-1")
         args=(--layer background --scaling fill --volume 35 --fps 24)
@@ -59,7 +79,7 @@ if [[ "$WP" == we:* ]]; then
             setsid -f "$HOME/.local/bin/we-auto-pause" >/dev/null 2>&1
         fi
     else
-        echo "linux-wallpaperengine not installed. Run: yay -S linux-wallpaperengine-v3-bin" >&2
+        echo "Neither mpvpaper nor linux-wallpaperengine is installed." >&2
     fi
 
     # Extract preview image for Material You 3 colors
@@ -75,11 +95,23 @@ fi
 
 [ -f "$WP" ] || { echo "File not found: $WP" >&2; exit 1; }
 printf '%s\n' "$WP" > "$STATE_FILE"
-pkill -f '(^|/)we-auto-pause( |$)' 2>/dev/null || true
-pkill -CONT -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
-pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
-sleep 0.1
-pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+stop_animated
+
+# Local video file via mpvpaper
+if [[ "${WP,,}" =~ \.(mp4|webm|mkv|mov)$ ]]; then
+    if command -v mpvpaper >/dev/null 2>&1; then
+        run_mpvpaper "$WP"
+    else
+        echo "mpvpaper not installed. Run: sudo pacman -S mpvpaper" >&2
+    fi
+    if command -v ffmpeg >/dev/null 2>&1; then
+        tmp_frame="/tmp/izanagi-wp-frame.jpg"
+        ffmpeg -y -ss 00:00:01 -i "$WP" -vframes 1 -q:v 2 "$tmp_frame" >/dev/null 2>&1 || true
+        apply_matugen "$tmp_frame"
+        rm -f "$tmp_frame"
+    fi
+    exit 0
+fi
 
 # 1. Persist & apply static wallpaper via hyprpaper
 printf '# Hyprpaper 0.8+ Block Syntax Configuration\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$WP" > "$HOME/.config/hypr/hyprpaper.conf"
