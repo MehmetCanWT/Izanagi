@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pause linux-wallpaperengine (SIGSTOP) when any window is on the active workspace, resume (SIGCONT) on empty desktop."""
+"""Pause animated wallpapers (mpvpaper via JSON IPC, linux-wallpaperengine via SIGSTOP) when windows or fullscreen apps are active."""
 import json
 import os
 import signal
@@ -10,6 +10,7 @@ import time
 RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 SIG = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
 SOCK_PATH = os.path.join(RUNTIME, "hypr", SIG, ".socket2.sock")
+MPV_SOCK = os.path.join(RUNTIME, "mpvpaper.sock")
 WATCH_EVENTS = ("workspace>>", "workspacev2>>", "openwindow>>", "closewindow>>", "movewindow>>", "movewindowv2>>", "fullscreen>>")
 
 
@@ -19,6 +20,20 @@ def get_we_pids():
         return [int(p) for p in out.split() if p.strip().isdigit()]
     except subprocess.CalledProcessError:
         return []
+
+
+def set_mpv_paused(paused: bool) -> bool:
+    if not os.path.exists(MPV_SOCK):
+        return False
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(1.0)
+        s.connect(MPV_SOCK)
+        s.sendall((json.dumps({"command": ["set_property", "pause", paused]}) + "\n").encode("utf-8"))
+        s.close()
+        return True
+    except OSError:
+        return False
 
 
 def active_has_windows():
@@ -41,25 +56,29 @@ def active_has_windows():
 
 
 def sync_state(paused_state):
-    pids = get_we_pids()
-    if not pids:
+    we_pids = get_we_pids()
+    has_mpv = os.path.exists(MPV_SOCK)
+    if not we_pids and not has_mpv:
         return paused_state
     should_pause = active_has_windows()
     if should_pause != paused_state:
-        sig = signal.SIGSTOP if should_pause else signal.SIGCONT
-        for pid in pids:
-            try:
-                os.kill(pid, sig)
-            except ProcessLookupError:
-                pass
+        if has_mpv:
+            set_mpv_paused(should_pause)
+        if we_pids:
+            sig = signal.SIGSTOP if should_pause else signal.SIGCONT
+            for pid in we_pids:
+                try:
+                    os.kill(pid, sig)
+                except ProcessLookupError:
+                    pass
     return should_pause
 
 
 def main():
     if not SIG or not os.path.exists(SOCK_PATH):
         return
-    # Let linux-wallpaperengine (including CEF web & 4K scenes) finish loading before pausing
-    time.sleep(4.0)
+    # Allow mpvpaper (1.5s) or 4K linux-wallpaperengine scenes (4.0s) to render initial frames
+    time.sleep(4.0 if get_we_pids() else 1.5)
     paused = sync_state(None)
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
