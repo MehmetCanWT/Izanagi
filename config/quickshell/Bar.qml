@@ -30,10 +30,24 @@ PanelWindow {
         target: Hyprland
         function onRawEvent(ev) {
             const n = ev.name
-            if (n === "openwindow" || n === "closewindow" || n === "movewindow" || n === "movewindowv2" || n === "activewindowv2") {
+            if (n === "openwindow" || n === "closewindow" || n === "movewindow" || n === "movewindowv2" || n === "activewindowv2" || n === "workspace" || n === "workspacev2") {
                 bar.wsRev++
             }
         }
+    }
+
+    Connections {
+        target: Hyprland.toplevels
+        function onValuesChanged() {
+            bar.wsRev++
+        }
+    }
+
+    Timer {
+        interval: 600
+        running: true
+        repeat: false
+        onTriggered: bar.wsRev++
     }
 
     function workspaceIcons(wsId, _rev, toplevels) {
