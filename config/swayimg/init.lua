@@ -4,6 +4,7 @@
 swayimg.imagelist.adjacent = true
 swayimg.imagelist.order = "numeric"
 swayimg.viewer.loop = true
+swayimg.text.visible = false
 
 -- Navigate previous/next image with Left/Right arrows (plus Space, h/l, PgUp/PgDn)
 swayimg.viewer.on_key("Right", function()
