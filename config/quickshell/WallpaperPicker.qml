@@ -98,16 +98,16 @@ Scope {
             "printf 'ACTIVE:%s\\n' \"$cur\"; " +
             "we_dir=\"$HOME/.local/share/Steam/steamapps/workshop/content/431960\"; " +
             "if [ -d \"$we_dir\" ]; then " +
-            "  python3 -c 'import glob,json,os; " +
-            "d=os.path.expanduser(\"~/.local/share/Steam/steamapps/workshop/content/431960\"); " +
-            "for p in sorted(glob.glob(os.path.join(d, \"*\", \"project.json\"))): " +
-            "  wid=os.path.basename(os.path.dirname(p)); " +
-            "  try: data=json.load(open(p)); title=str(data.get(\"title\", wid)).replace(\"|\",\" \"); prev=data.get(\"preview\",\"\")\n" +
-            "  except Exception: title=wid; prev=\"\"\n" +
-            "  pp=os.path.join(os.path.dirname(p), prev) if prev else \"\"; " +
-            "  if not (pp and os.path.isfile(pp)): " +
-            "    cands=glob.glob(os.path.join(os.path.dirname(p), \"preview.*\")); pp=cands[0] if cands else \"\"\n" +
-            "  if pp: print(f\"WE|{wid}|{pp}|{title}\")' 2>/dev/null || true; " +
+            "  for p in \"$we_dir\"/*/project.json; do " +
+            "    [ -f \"$p\" ] || continue; " +
+            "    dir=${p%/project.json}; wid=${dir##*/}; " +
+            "    title=$(jq -r '.title // empty' \"$p\" 2>/dev/null | tr -d '|'); " +
+            "    [ -n \"$title\" ] || title=\"$wid\"; " +
+            "    prev=$(jq -r '.preview // empty' \"$p\" 2>/dev/null); " +
+            "    pp=\"$dir/$prev\"; " +
+            "    [ -f \"$pp\" ] || pp=$(find \"$dir\" -maxdepth 1 -type f -iname 'preview.*' 2>/dev/null | head -n1 || true); " +
+            "    [ -f \"$pp\" ] && printf 'WE|%s|%s|%s\\n' \"$wid\" \"$pp\" \"$title\"; " +
+            "  done; " +
             "fi; " +
             "find \"$HOME/Pictures/Wallpapers\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) | sort"
         ]
