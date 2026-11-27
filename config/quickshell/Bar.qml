@@ -31,6 +31,7 @@ PanelWindow {
         function onRawEvent(ev) {
             const n = ev.name
             if (n === "openwindow" || n === "closewindow" || n === "movewindow" || n === "movewindowv2" || n === "activewindowv2" || n === "workspace" || n === "workspacev2") {
+                Hyprland.refreshToplevels()
                 bar.wsRev++
             }
         }
@@ -47,7 +48,10 @@ PanelWindow {
         interval: 600
         running: true
         repeat: false
-        onTriggered: bar.wsRev++
+        onTriggered: {
+            Hyprland.refreshToplevels()
+            bar.wsRev++
+        }
     }
 
     function focusedWorkspaceWindows(_rev, toplevels) {
@@ -62,14 +66,15 @@ PanelWindow {
             const tws = t.workspace ? t.workspace.id : (t.lastIpcObject && t.lastIpcObject.workspace ? t.lastIpcObject.workspace.id : -1)
             if (tws !== fw) continue
             const addr = t.address ? String(t.address) : ""
-            const cls = (t.lastIpcObject && t.lastIpcObject.class) ? String(t.lastIpcObject.class) : ""
+            const cls = (t.wayland && t.wayland.appId)
+                ? String(t.wayland.appId)
+                : ((t.lastIpcObject && t.lastIpcObject.class) ? String(t.lastIpcObject.class) : "")
             const entry = cls ? DesktopEntries.heuristicLookup(cls) : null
-            const iconName = (entry && entry.icon) ? entry.icon : (cls ? cls.toLowerCase() : "application-x-executable")
-            let path = Quickshell.iconPath(iconName, true)
-            if (!path) path = Quickshell.iconPath("application-x-executable", true)
+            const iconName = (entry && entry.icon) ? entry.icon : (cls ? cls.toLowerCase() : "")
+            const path = iconName ? Quickshell.iconPath(iconName, true) : ""
             items.push({
                 address: addr,
-                icon: path,
+                icon: path || "",
                 active: activeAddr.length > 0 && addr === activeAddr
             })
         }
@@ -168,12 +173,22 @@ PanelWindow {
                     border.color: Theme.accent
 
                     Image {
+                        visible: modelData.icon.length > 0
                         anchors.centerIn: parent
                         width: 15
                         height: 15
                         source: modelData.icon
                         sourceSize: Qt.size(15, 15)
                         smooth: true
+                    }
+
+                    Text {
+                        visible: modelData.icon.length === 0
+                        anchors.centerIn: parent
+                        text: "󰣆"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        color: "#ffffff"
                     }
 
                     Rectangle {
