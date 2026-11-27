@@ -8,7 +8,7 @@ state_file="${XDG_RUNTIME_DIR:-/tmp}/hypr_show_desktop_${ws}"
 special_ws="special:desktop_${ws}"
 
 mapfile -t current_wins < <(
-    hyprctl clients -j | jq -r --argjson ws "$ws" '.[] | select(.workspace.id == $ws and .mapped == true) | .address'
+    hyprctl clients -j | jq -r --argjson ws "$ws" '.[] | select(.workspace.id == $ws and .mapped == true and ((.class // "") | test("wallpaperengine"; "i") | not)) | .address'
 )
 
 if [ "${#current_wins[@]}" -gt 0 ]; then
