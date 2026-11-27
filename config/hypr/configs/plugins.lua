@@ -27,7 +27,7 @@ end
 
 if hl.plugin.confined_floats ~= nil then
     hl.window_rule({
-        match = { float = true },
+        match = { float = true, fullscreen = false },
         ["confined-floats:confine"] = true,
     })
 end
