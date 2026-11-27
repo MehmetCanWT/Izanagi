@@ -158,28 +158,25 @@ PanelWindow {
         Row {
             id: taskbarRow
             anchors.centerIn: parent
-            spacing: 5
+            spacing: 8
             z: 2
 
             Repeater {
                 model: bar.focusedWorkspaceWindows(bar.wsRev, Hyprland.toplevels.values)
-                delegate: Rectangle {
+                delegate: Item {
                     required property var modelData
-                    width: 28
+                    width: 24
                     height: 22
-                    radius: 6
-                    color: modelData.active ? Theme.primaryContainer : Theme.surfaceAlt
-                    border.width: modelData.active ? 1 : 0
-                    border.color: Theme.accent
 
                     Image {
                         visible: modelData.icon.length > 0
                         anchors.centerIn: parent
-                        width: 15
-                        height: 15
+                        width: 17
+                        height: 17
                         source: modelData.icon
-                        sourceSize: Qt.size(15, 15)
+                        sourceSize: Qt.size(17, 17)
                         smooth: true
+                        opacity: modelData.active ? 1.0 : 0.72
                     }
 
                     Text {
@@ -187,15 +184,14 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: "󰣆"
                         font.family: Theme.fontFamily
-                        font.pixelSize: 13
-                        color: "#ffffff"
+                        font.pixelSize: 15
+                        color: modelData.active ? "#ffffff" : Theme.textDim
                     }
 
                     Rectangle {
                         visible: modelData.active
                         anchors {
                             bottom: parent.bottom
-                            bottomMargin: 1
                             horizontalCenter: parent.horizontalCenter
                         }
                         width: 10
