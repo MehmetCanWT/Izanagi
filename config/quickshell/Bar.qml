@@ -50,25 +50,30 @@ PanelWindow {
         onTriggered: bar.wsRev++
     }
 
-    function workspaceIcons(wsId, _rev, toplevels) {
-        const seen = {}
-        const icons = []
+    function focusedWorkspaceWindows(_rev, toplevels) {
+        const fw = Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : -1
+        if (fw <= 0) return []
+        const activeAddr = Hyprland.activeToplevel && Hyprland.activeToplevel.address ? String(Hyprland.activeToplevel.address) : ""
+        const items = []
         const list = toplevels ? [...toplevels] : [...Hyprland.toplevels.values]
         for (let i = 0; i < list.length; i++) {
             const t = list[i]
             if (!t) continue
             const tws = t.workspace ? t.workspace.id : (t.lastIpcObject && t.lastIpcObject.workspace ? t.lastIpcObject.workspace.id : -1)
-            if (tws !== wsId) continue
+            if (tws !== fw) continue
+            const addr = t.address ? String(t.address) : ""
             const cls = (t.lastIpcObject && t.lastIpcObject.class) ? String(t.lastIpcObject.class) : ""
-            if (!cls || seen[cls]) continue
-            seen[cls] = true
-            const entry = DesktopEntries.heuristicLookup(cls)
-            const iconName = (entry && entry.icon) ? entry.icon : cls.toLowerCase()
-            const path = Quickshell.iconPath(iconName, true)
-            if (path) icons.push(path)
-            if (icons.length >= 4) break
+            const entry = cls ? DesktopEntries.heuristicLookup(cls) : null
+            const iconName = (entry && entry.icon) ? entry.icon : (cls ? cls.toLowerCase() : "application-x-executable")
+            let path = Quickshell.iconPath(iconName, true)
+            if (!path) path = Quickshell.iconPath("application-x-executable", true)
+            items.push({
+                address: addr,
+                icon: path,
+                active: activeAddr.length > 0 && addr === activeAddr
+            })
         }
-        return icons
+        return items
     }
 
     function refreshStats() {
@@ -144,6 +149,63 @@ PanelWindow {
         border.color: Theme.border
         clip: true
 
+        // Center: Windows-taskbar style open apps in focused workspace
+        Row {
+            id: taskbarRow
+            anchors.centerIn: parent
+            spacing: 5
+            z: 2
+
+            Repeater {
+                model: bar.focusedWorkspaceWindows(bar.wsRev, Hyprland.toplevels.values)
+                delegate: Rectangle {
+                    required property var modelData
+                    width: 28
+                    height: 22
+                    radius: 6
+                    color: modelData.active ? Theme.primaryContainer : Theme.surfaceAlt
+                    border.width: modelData.active ? 1 : 0
+                    border.color: Theme.accent
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 15
+                        height: 15
+                        source: modelData.icon
+                        sourceSize: Qt.size(15, 15)
+                        smooth: true
+                    }
+
+                    Rectangle {
+                        visible: modelData.active
+                        anchors {
+                            bottom: parent.bottom
+                            bottomMargin: 1
+                            horizontalCenter: parent.horizontalCenter
+                        }
+                        width: 10
+                        height: 2
+                        radius: 1
+                        color: Theme.accent
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        onClicked: (mouse) => {
+                            if (!modelData.address) return
+                            const hex = modelData.address.startsWith("0x") ? modelData.address : ("0x" + modelData.address)
+                            if (mouse.button === Qt.MiddleButton) {
+                                Hyprland.dispatch("hl.dsp.window.close({ window = \"address:" + hex + "\" })")
+                            } else {
+                                Hyprland.dispatch("hl.dsp.focus({ window = \"address:" + hex + "\" })")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         RowLayout {
             anchors {
                 fill: parent
@@ -182,39 +244,19 @@ PanelWindow {
                     delegate: Rectangle {
                         required property var modelData
                         readonly property bool isActive: Hyprland.focusedWorkspace?.id === modelData.id
-                        readonly property var wsIcons: bar.workspaceIcons(modelData.id, bar.wsRev, Hyprland.toplevels.values)
                         visible: modelData.id > 0
-                        width: Math.max(26, wsRow.implicitWidth + 12)
+                        width: 26
                         height: 22
                         radius: 6
                         color: isActive ? Theme.accent : Theme.surfaceAlt
 
-                        Row {
-                            id: wsRow
+                        Text {
                             anchors.centerIn: parent
-                            spacing: 4
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.id
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 12
-                                font.bold: isActive
-                                color: isActive ? Theme.onPrimary : "#ffffff"
-                            }
-
-                            Repeater {
-                                model: wsIcons
-                                delegate: Image {
-                                    required property string modelData
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: 13
-                                    height: 13
-                                    source: modelData
-                                    sourceSize: Qt.size(13, 13)
-                                    smooth: true
-                                }
-                            }
+                            text: modelData.id
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                            font.bold: isActive
+                            color: isActive ? Theme.onPrimary : "#ffffff"
                         }
 
                         MouseArea {
