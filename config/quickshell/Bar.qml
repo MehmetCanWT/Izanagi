@@ -24,14 +24,27 @@ PanelWindow {
     property bool batCharging: false
     property bool dndOn: false
     property int notifCount: 0
+    property int wsRev: 0
 
-    function workspaceIcons(wsId) {
+    Connections {
+        target: Hyprland
+        function onRawEvent(ev) {
+            const n = ev.name
+            if (n === "openwindow" || n === "closewindow" || n === "movewindow" || n === "movewindowv2" || n === "activewindowv2") {
+                bar.wsRev++
+            }
+        }
+    }
+
+    function workspaceIcons(wsId, _rev, toplevels) {
         const seen = {}
         const icons = []
-        const list = [...Hyprland.toplevels.values]
+        const list = toplevels ? [...toplevels] : [...Hyprland.toplevels.values]
         for (let i = 0; i < list.length; i++) {
             const t = list[i]
-            if (!t || !t.workspace || t.workspace.id !== wsId) continue
+            if (!t) continue
+            const tws = t.workspace ? t.workspace.id : (t.lastIpcObject && t.lastIpcObject.workspace ? t.lastIpcObject.workspace.id : -1)
+            if (tws !== wsId) continue
             const cls = (t.lastIpcObject && t.lastIpcObject.class) ? String(t.lastIpcObject.class) : ""
             if (!cls || seen[cls]) continue
             seen[cls] = true
@@ -155,7 +168,7 @@ PanelWindow {
                     delegate: Rectangle {
                         required property var modelData
                         readonly property bool isActive: Hyprland.focusedWorkspace?.id === modelData.id
-                        readonly property var wsIcons: bar.workspaceIcons(modelData.id)
+                        readonly property var wsIcons: bar.workspaceIcons(modelData.id, bar.wsRev, Hyprland.toplevels.values)
                         visible: modelData.id > 0
                         width: Math.max(26, wsRow.implicitWidth + 12)
                         height: 22
