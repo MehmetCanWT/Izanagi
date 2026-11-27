@@ -41,12 +41,14 @@ if [[ "$WP" == we:* ]]; then
     [ -d "$WE_DIR/$WE_ID" ] || { echo "Wallpaper Engine item not found: $WE_ID" >&2; exit 1; }
 
     printf '%s\n' "$WP" > "$STATE_FILE"
-    pkill -x linux-wallpaperengine 2>/dev/null || true
+    pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+    sleep 0.1
+    pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
 
     if command -v linux-wallpaperengine >/dev/null 2>&1; then
         mapfile -t monitors < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
         [ "${#monitors[@]}" -gt 0 ] || monitors=("eDP-1")
-        args=(--layer background --scaling fill --silent --fps 30)
+        args=(--layer background --scaling fill --silent --no-audio-processing --fps 30)
         for mon in "${monitors[@]}"; do
             args+=(--screen-root "$mon" --bg "$WE_ID")
         done
@@ -56,14 +58,21 @@ if [[ "$WP" == we:* ]]; then
     fi
 
     # Extract preview image for Material You 3 colors
-    preview=$(find "$WE_DIR/$WE_ID" -maxdepth 1 -type f \( -iname 'preview.jpg' -o -iname 'preview.png' -o -iname 'preview.jpeg' -o -iname 'preview.gif' \) | head -n1 || true)
+    preview=""
+    if [ -f "$WE_DIR/$WE_ID/project.json" ]; then
+        p_name=$(jq -r '.preview // empty' "$WE_DIR/$WE_ID/project.json" 2>/dev/null || true)
+        [ -n "$p_name" ] && [ -f "$WE_DIR/$WE_ID/$p_name" ] && preview="$WE_DIR/$WE_ID/$p_name"
+    fi
+    [ -n "$preview" ] || preview=$(find "$WE_DIR/$WE_ID" -maxdepth 1 -type f \( -iname 'preview.jpg' -o -iname 'preview.png' -o -iname 'preview.jpeg' -o -iname 'preview.gif' \) | head -n1 || true)
     apply_matugen "$preview"
     exit 0
 fi
 
 [ -f "$WP" ] || { echo "File not found: $WP" >&2; exit 1; }
 printf '%s\n' "$WP" > "$STATE_FILE"
-pkill -x linux-wallpaperengine 2>/dev/null || true
+pkill -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
+sleep 0.1
+pkill -9 -f '(^|/)linux-wallpaperengine( |$)' 2>/dev/null || true
 
 # 1. Persist & apply static wallpaper via hyprpaper
 printf '# Hyprpaper 0.8+ Block Syntax Configuration\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$WP" > "$HOME/.config/hypr/hyprpaper.conf"
