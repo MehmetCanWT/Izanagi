@@ -101,8 +101,6 @@ Scope {
             "  for p in \"$we_dir\"/*/project.json; do " +
             "    [ -f \"$p\" ] || continue; " +
             "    dir=${p%/project.json}; wid=${dir##*/}; " +
-            "    wtype=$(jq -r '.type // \"scene\"' \"$p\" 2>/dev/null | tr '[:upper:]' '[:lower:]'); " +
-            "    [ \"$wtype\" = \"scene\" ] || [ \"$wtype\" = \"video\" ] || continue; " +
             "    title=$(jq -r '.title // empty' \"$p\" 2>/dev/null | tr -d '|'); " +
             "    [ -n \"$title\" ] || title=\"$wid\"; " +
             "    prev=$(jq -r '.preview // empty' \"$p\" 2>/dev/null); " +

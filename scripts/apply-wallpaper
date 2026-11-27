@@ -50,7 +50,7 @@ if [[ "$WP" == we:* ]]; then
     if command -v linux-wallpaperengine >/dev/null 2>&1; then
         mapfile -t monitors < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
         [ "${#monitors[@]}" -gt 0 ] || monitors=("eDP-1")
-        args=(--layer background --scaling fill --volume 35 --fps 24 --disable-particles --disable-parallax --disable-mouse)
+        args=(--layer background --scaling fill --volume 35 --fps 24)
         for mon in "${monitors[@]}"; do
             args+=(--screen-root "$mon" --bg "$WE_ID")
         done

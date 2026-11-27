@@ -58,8 +58,8 @@ def sync_state(paused_state):
 def main():
     if not SIG or not os.path.exists(SOCK_PATH):
         return
-    # Let linux-wallpaperengine render its initial frames first
-    time.sleep(1.5)
+    # Let linux-wallpaperengine (including CEF web & 4K scenes) finish loading before pausing
+    time.sleep(4.0)
     paused = sync_state(None)
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
