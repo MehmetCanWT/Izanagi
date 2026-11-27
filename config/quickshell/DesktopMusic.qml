@@ -78,13 +78,15 @@ Scope {
         onTriggered: mediaProc.running = true
     }
 
+    readonly property string allowedPlayers: "sonata,spotify,spotify_player,ncspot,youtube-music,YouTubeMusic,ytmdesktop,pear-desktop,mpd,elisa,amberol,cider,feishin,tidal-hifi,harmonoid,lollypop,rhythmbox,cmus"
+
     function mediaCmd(arg) {
-        actProc.command = ["playerctl", "-i", "kdeconnect", arg]
+        actProc.command = ["playerctl", "-p", root.allowedPlayers, arg]
         actProc.running = true
     }
 
     function seekTo(sec) {
-        actProc.command = ["playerctl", "-i", "kdeconnect", "position", String(Math.max(0, Math.floor(sec)))]
+        actProc.command = ["playerctl", "-p", root.allowedPlayers, "position", String(Math.max(0, Math.floor(sec)))]
         actProc.running = true
     }
 
@@ -92,13 +94,14 @@ Scope {
         id: mediaProc
         command: [
             "sh", "-c",
-            "st=$(playerctl -i kdeconnect status 2>/dev/null || true); " +
-            "t=$(playerctl -i kdeconnect metadata title 2>/dev/null || true); " +
-            "a=$(playerctl -i kdeconnect metadata artist 2>/dev/null || true); " +
-            "art=$(playerctl -i kdeconnect metadata sonata:motionArtUrl 2>/dev/null || true); " +
-            "[ -n \"$art\" ] || art=$(playerctl -i kdeconnect metadata mpris:artUrl 2>/dev/null || true); " +
-            "pos=$(playerctl -i kdeconnect position 2>/dev/null || echo 0); " +
-            "len=$(playerctl -i kdeconnect metadata mpris:length 2>/dev/null || echo 0); " +
+            "P='" + root.allowedPlayers + "'; " +
+            "st=$(playerctl -p \"$P\" status 2>/dev/null || true); " +
+            "t=$(playerctl -p \"$P\" metadata title 2>/dev/null || true); " +
+            "a=$(playerctl -p \"$P\" metadata artist 2>/dev/null || true); " +
+            "art=$(playerctl -p \"$P\" metadata sonata:motionArtUrl 2>/dev/null || true); " +
+            "[ -n \"$art\" ] || art=$(playerctl -p \"$P\" metadata mpris:artUrl 2>/dev/null || true); " +
+            "pos=$(playerctl -p \"$P\" position 2>/dev/null || echo 0); " +
+            "len=$(playerctl -p \"$P\" metadata mpris:length 2>/dev/null || echo 0); " +
             "printf '%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n' \"$st\" \"$t\" \"$a\" \"$art\" \"$pos\" \"$len\""
         ]
         stdout: StdioCollector {
