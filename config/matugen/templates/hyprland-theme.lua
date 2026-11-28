@@ -15,3 +15,18 @@ hl.config({
         background_color = "0x{{colors.surface_container_lowest.default.hex_stripped}}",
     },
 })
+
+if hl.plugin.overview ~= nil then
+    hl.config({
+        plugin = {
+            overview = {
+                panelColor                  = "rgba({{colors.surface_container_lowest.default.hex_stripped}}dd)",
+                panelBorderColor            = "rgba({{colors.outline_variant.default.hex_stripped}}88)",
+                workspaceActiveBackground   = "rgba({{colors.surface_container_high.default.hex_stripped}}cc)",
+                workspaceInactiveBackground = "rgba({{colors.surface_container.default.hex_stripped}}aa)",
+                workspaceActiveBorder       = "rgba({{colors.primary.default.hex_stripped}}ee)",
+                workspaceInactiveBorder     = "rgba({{colors.outline_variant.default.hex_stripped}}66)",
+            },
+        },
+    })
+end
